@@ -1,0 +1,816 @@
+/* ========================================
+   Fighting Game Engine — Game UI Styles
+   ======================================== */
+
+/* --- Reset / Base --- */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #0a0a0a;
+  color: #eee;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+}
+
+code {
+  font-family: ui-monospace, "SF Mono", Monaco, Consolas, monospace;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: #6f6;
+}
+
+/* --- Buttons --- */
+.btn {
+  display: inline-block;
+  padding: 8px 16px;
+  border: 2px solid #444;
+  background: #222;
+  color: #eee;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  background: #333;
+  border-color: #666;
+}
+
+.btn--primary {
+  background: #1a6b1a;
+  border-color: #2a8a2a;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: #2a8a2a;
+}
+
+.btn--secondary {
+  background: #333;
+  border-color: #555;
+}
+
+.btn--large {
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+.btn--small {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.btn--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #1a1a1a;
+  border-color: #333;
+  color: #666;
+}
+
+/* ========================================
+   Lobby Page
+   ======================================== */
+.lobby {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2a 100%);
+}
+
+.lobby__card {
+  background: #181818;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 32px;
+  max-width: 540px;
+  width: 100%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.lobby__title {
+  font-size: 28px;
+  margin: 0 0 4px;
+  text-align: center;
+  letter-spacing: 1.5px;
+  color: #fff;
+  text-shadow: 0 0 12px rgba(80, 180, 255, 0.4);
+}
+
+.lobby__subtitle {
+  font-size: 13px;
+  color: #888;
+  margin: 0 0 24px;
+  text-align: center;
+}
+
+.lobby__section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.lobby__section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.lobby__section--disabled {
+  opacity: 0.5;
+}
+
+.lobby__section--links {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.lobby__heading {
+  font-size: 14px;
+  color: #aaa;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.lobby__hint {
+  font-size: 12px;
+  color: #777;
+  margin: 8px 0 0;
+}
+
+.lobby__hint--muted {
+  font-style: italic;
+}
+
+.lobby__join {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.lobby__input {
+  flex: 1;
+  padding: 8px 12px;
+  background: #1a1a1a;
+  border: 2px solid #333;
+  border-radius: 4px;
+  color: #eee;
+  font-family: ui-monospace, monospace;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.lobby__input:focus {
+  outline: none;
+  border-color: #2a8a2a;
+}
+
+.lobby__input:disabled {
+  background: #111;
+  color: #555;
+}
+
+.lobby__link {
+  color: #4a9aff;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.lobby__link:hover {
+  text-decoration: underline;
+}
+
+.lobby__version {
+  color: #555;
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+}
+
+/* ========================================
+   Local 2P Page — Character Select
+   ======================================== */
+.local-page {
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+}
+
+.char-select {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.char-select__title {
+  font-size: 24px;
+  text-align: center;
+  margin: 0 0 24px;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+.char-select__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.char-card {
+  background: #1a1a1a;
+  border: 3px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 16px;
+  cursor: pointer;
+  text-align: left;
+  color: #eee;
+  transition: all 0.15s;
+  font-family: inherit;
+  position: relative;
+  min-height: 140px;
+}
+
+.char-card:hover {
+  border-color: #444;
+  background: #222;
+}
+
+.char-card--p1 {
+  border-color: #2a8a2a;
+  box-shadow: 0 0 16px rgba(80, 200, 80, 0.3);
+}
+
+.char-card--p2 {
+  border-color: #8a2a8a;
+  box-shadow: 0 0 16px rgba(200, 80, 200, 0.3);
+}
+
+.char-card--both {
+  border-color: #d4a017;
+  box-shadow: 0 0 24px rgba(212, 160, 23, 0.5);
+}
+
+.char-card__name {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #fff;
+}
+
+.char-card__author {
+  font-size: 11px;
+  color: #777;
+  margin-bottom: 8px;
+}
+
+.char-card__desc {
+  font-size: 12px;
+  color: #aaa;
+  line-height: 1.5;
+}
+
+.char-card__indicators {
+  margin-top: 12px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Download badges for downloadable characters */
+.char-card__download-badge {
+  margin-top: 8px;
+  display: flex;
+  gap: 4px;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.badge--download {
+  background: #4a4a1a;
+  color: #ffa;
+  border: 1px solid #6a6a2a;
+}
+
+.badge--downloading {
+  background: #1a3a4a;
+  color: #aaf;
+  border: 1px solid #2a5a6a;
+}
+
+.badge--cached {
+  background: #1a4a2a;
+  color: #afa;
+  border: 1px solid #2a6a3a;
+}
+
+.badge--error {
+  background: #4a1a1a;
+  color: #faa;
+  border: 1px solid #6a2a2a;
+}
+
+/* Download progress bar */
+.char-card__progress {
+  margin-top: 6px;
+  width: 100%;
+  height: 4px;
+  background: #222;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.char-card__progress-fill {
+  height: 100%;
+  background: #4a8;
+  transition: width 0.2s ease;
+}
+
+/* Downloadable character card has a slightly different border */
+.char-card--downloadable {
+  border-style: dashed;
+}
+
+.char-indicator {
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #333;
+}
+
+.char-indicator--p1 {
+  background: #2a6b2a;
+  color: #afa;
+}
+
+.char-indicator--p2 {
+  background: #6b2a6b;
+  color: #faf;
+}
+
+.char-select__status {
+  display: flex;
+  justify-content: space-around;
+  padding: 16px;
+  background: #181818;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.char-status {
+  color: #aaa;
+}
+
+.char-status strong {
+  color: #fff;
+}
+
+.char-status--locked strong {
+  color: #6f6;
+}
+
+.char-status__sub {
+  color: #ffb84d;
+  font-size: 11px;
+  font-style: italic;
+}
+
+.char-select__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+}
+
+.char-select__controls button {
+  margin: 0 4px;
+}
+
+/* ========================================
+   Local 2P Page — Fight Screen
+   ======================================== */
+.local-page--fight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+}
+
+.fight {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fight__hud {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 12px;
+  background: #181818;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+}
+
+.fight__player {
+  text-align: left;
+}
+
+.fight__player--p2 {
+  text-align: right;
+}
+
+.fight__player-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.fight__player--p1 .fight__player-name {
+  color: #6f6;
+}
+
+.fight__player--p2 .fight__player-name {
+  color: #faf;
+}
+
+.fight__player-input {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.fight__center {
+  text-align: center;
+}
+
+.fight__vs {
+  font-size: 18px;
+  font-weight: bold;
+  color: #d4a017;
+  letter-spacing: 2px;
+}
+
+.fight__frame {
+  font-size: 11px;
+  color: #666;
+  font-family: ui-monospace, monospace;
+  margin: 2px 0 8px;
+}
+
+.fight__canvas-wrap {
+  background: #000;
+  border: 2px solid #2a2a2a;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 4 / 3;
+  width: 100%;
+}
+
+.fight__controls-help {
+  font-size: 11px;
+  color: #666;
+  text-align: center;
+  line-height: 1.7;
+  padding: 8px;
+  background: #111;
+  border-radius: 4px;
+}
+
+.fight__controls-help strong {
+  color: #aaa;
+}
+
+/* ========================================
+   Game Canvas (used in GameCanvas component)
+   ======================================== */
+.game-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+.game-canvas {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  display: block;
+}
+
+.game-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  color: #aaa;
+  font-family: monospace;
+  gap: 16px;
+  font-size: 13px;
+}
+
+/* Preparing screen (character download/inject) */
+.preparing-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  text-align: center;
+}
+
+.preparing-screen h2 {
+  margin: 0;
+  color: #fff;
+}
+
+.preparing-screen p {
+  color: #aaa;
+  font-size: 14px;
+  max-width: 400px;
+}
+
+.preparing-progress {
+  width: 300px;
+  height: 8px;
+  background: #222;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #333;
+}
+
+.preparing-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2a8a2a, #4a4);
+  transition: width 0.3s ease;
+}
+
+.game-loading__spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #333;
+  border-top-color: #0af;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.game-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #1a0000;
+  color: #f66;
+  font-family: monospace;
+  padding: 24px;
+  text-align: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.game-error__hint {
+  font-size: 12px;
+  color: #999;
+}
+
+.game-error code {
+  background: #333;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #0f0;
+}
+
+/* ========================================
+   Touch Controls (mobile, future use)
+   ======================================== */
+.touch-controls {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  padding: 16px;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 100;
+}
+
+@media (pointer: coarse) {
+  .touch-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+}
+
+.touch-dpad {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  pointer-events: auto;
+}
+
+.touch-dpad__btn {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border: 2px solid #555;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ddd;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.touch-dpad__btn:active {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: #0af;
+}
+
+.touch-dpad__center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border: 2px solid #333;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.touch-actions {
+  position: relative;
+  width: 140px;
+  height: 120px;
+  pointer-events: auto;
+}
+
+.touch-actions__btn {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid #555;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ddd;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.touch-actions__btn:active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: #f80;
+  transform: translate(-50%, -50%) scale(0.92);
+}
+
+/* --- Fight HUD: Lifebars, Timer, Round Info --- */
+
+.fight__lifebar {
+  width: 200px;
+  height: 16px;
+  background: #333;
+  border: 2px solid #666;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 4px 0;
+}
+
+.fight__lifebar-fill {
+  height: 100%;
+  transition: width 0.15s ease-out;
+}
+
+.fight__lifebar-fill--p1 {
+  background: linear-gradient(90deg, #ff4444, #ff8800);
+  float: right;
+}
+
+.fight__lifebar-fill--p2 {
+  background: linear-gradient(90deg, #ff8800, #ff4444);
+}
+
+.fight__player-stats {
+  font-size: 11px;
+  color: #aaa;
+  font-family: monospace;
+}
+
+.fight__round {
+  font-size: 14px;
+  font-weight: bold;
+  color: #ff0;
+  text-transform: uppercase;
+}
+
+.fight__timer {
+  font-size: 28px;
+  font-weight: bold;
+  color: #fff;
+  font-family: monospace;
+  text-shadow: 0 0 4px #000;
+}
+
+.fight__phase {
+  font-size: 18px;
+  font-weight: bold;
+  color: #0f0;
+  text-transform: uppercase;
+  text-shadow: 0 0 4px #000;
+  min-height: 24px;
+}
+
+/* --- Mode label --- */
+.fight__mode-label {
+  font-size: 11px;
+  color: #88f;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+/* --- Character select mode/difficulty selectors --- */
+.char-select__mode {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 12px 0;
+}
+
+.char-select__difficulty {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0;
+  font-size: 13px;
+  color: #ccc;
+}
+
+/* --- Fight HUD improvements --- */
+.fight__mode-label {
+  font-size: 11px;
+  color: #88f;
+  text-transform: uppercase;
+  font-weight: bold;
+  margin-bottom: 2px;
+}

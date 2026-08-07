@@ -1,0 +1,18 @@
+TARGET = libprism.a
+OBJS = animation.o physics.o drawing.o texture.o \
+collision.o input.o file.o filereader.o math.o geometry.o introtexthelper.o \
+timer.o optionhandler.o datastructures.o memoryhandler.o numberpopuphandler.o \
+wrapper.o physicshandler.o script.o stagehandler.o collisionhandler.o \
+collisionanimation.o animationtree.o texturepool.o \
+storyboard.o screeneffect.o system.o texthandler.o compression.o soundeffect.o \
+actorhandler.o tweening.o lifebar.o logoscreen.o loadingscreen.o \
+mugendefreader.o mugendefwriter.o mugenanimationreader.o mugenanimationhandler.o \
+mugenscriptparser.o lz5.o mugenspritefilereader.o \
+mugentexthandler.o \
+mugensoundfilereader.o clipboardhandler.o log.o debug.o \
+memorypool.o memorystack.o errorscreen.o \
+blitzentity.o blitzcamerahandler.o blitzcomponent.o blitzmugenanimation.o \
+blitzphysics.o blitzmugensound.o blitztimelineanimationreader.o \
+blitztimelineanimation.o blitzclick.o blitzcollision.o blitzparticles.o \
+blitzplatforming.o \
+stlutil.o

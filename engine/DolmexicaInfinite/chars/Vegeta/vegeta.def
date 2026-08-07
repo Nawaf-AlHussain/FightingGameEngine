@@ -1,0 +1,31 @@
+[info]
+name ="vegeta"
+displayname ="Vegeta"
+versiondate = 02,13,2011
+mugenversion =
+author ="CHOUJIN"
+pal.defaults = 4, 1, 5, 2
+
+[files]
+cns = vegeta.cns
+sprite = vegeta.sff
+anim = vegeta.air
+sound = vegeta.snd
+cmd = vegeta.cmd
+stcommon =common1.cns
+st = vegeta.cns
+st1 = attacks.cns
+st2 = specials.cns
+st3 = hypers.cns
+st9 = AI.cns
+pal1 = arcade.act
+pal2 = black.act
+pal3 = super2.act
+pal4 = bukuu.act
+pal5 = dark.act
+pal6 = super.act
+
+;[arcade]
+;intro.storyboard=
+;ending.storyboard=
+

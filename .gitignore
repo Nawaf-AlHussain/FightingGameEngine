@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.production.local
+
+# WASM build artifacts — committed so Vercel deployments have them.
+# (Build takes 5+ min and needs Emscripten SDK — not feasible on Vercel.)
+# Each rebuild changes file contents, so commit after every build:wasm.
+
+# Intermediate build directory
+build/
+
+# Emscripten SDK
+emsdk/
+
+# Engine source (large C++ repo, added separately)
+# engine/DolmexicaInfinite/.git/
+
+# Uploaded/temp files
+upload/
+skills/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/build/
+.vs/
+*.vcxproj.user
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts

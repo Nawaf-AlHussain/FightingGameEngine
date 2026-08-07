@@ -1,0 +1,36 @@
+#pragma once
+
+#include <assert.h>
+
+#include "log.h"
+#include "system.h"
+#include "math.h"
+#include "wrapper.h"
+#include "geometry.h"
+#include "collisionhandler.h"
+#include "input.h"
+#include "timer.h"
+#include "screeneffect.h"
+#include "tweening.h"
+#include "sound.h"
+#include "soundeffect.h"
+#include "stlutil.h"
+
+#include "mugendefreader.h"
+#include "mugentexthandler.h"
+#include "mugensoundfilereader.h"
+
+#include "blitzcamerahandler.h"
+#include "blitzclick.h"
+#include "blitzcollision.h"
+#include "blitzcomponent.h"
+#include "blitzentity.h"
+#include "blitzmugenanimation.h"
+#include "blitzmugensound.h"
+#include "blitzparticles.h"
+#include "blitzphysics.h"
+#include "blitztimelineanimation.h"
+#include "blitzplatforming.h"
+
+using namespace std;
+using namespace prism;

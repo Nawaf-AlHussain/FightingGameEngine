@@ -1,0 +1,35 @@
+; ============================================================================
+; select.def — Character roster and stage selection
+; ============================================================================
+; Lists playable characters and stages. Characters are referenced by
+; directory name under chars/ — the engine loads chars/<name>/<name>.def
+;
+; See: engine/DolmexicaInfinite/characterselectscreen.cpp
+
+[Options]
+; Arcade mode: number of enemies per "order" tier
+; Format: order1count, order2count, ...
+arcade.maxmatches = 1,0,0,0,0,0,0,0,0,0
+; Team arcade mode
+team.maxmatches = 1,0,0,0,0,0,0,0,0,0
+; Survival mode matches per tier
+survival.maxmatches = 1,0,0,0,0,0,0,0,0,0
+
+[Characters]
+; Each entry is a character directory name (under chars/)
+; Format: name [, stage [, music [, order ]]]
+; Optional: includestage = (true/false) controls stage inclusion
+
+; --- Bundled characters (Phase 1) ---
+Songoku
+Vegeta
+
+; --- R2-only characters (Phase 1.5+, not yet streamable) ---
+; KnightmareSuperman
+; Nightwing
+
+[ExtraStages]
+; Stages selectable in the stage select screen
+; Format: stagepath [, music [, musicstage ]]
+stages/uiu_campus_low.def
+stages/stage0.def

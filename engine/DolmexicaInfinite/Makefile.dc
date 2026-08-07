@@ -1,0 +1,8 @@
+include Makefile.common
+include /mnt/c/DEV/PROJECTS/addons/prism/Makefile.commondc
+
+all: complete
+
+actions_user:
+
+clean_user:

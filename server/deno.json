@@ -1,0 +1,35 @@
+{
+  "tasks": {
+    "start": "deno run --allow-net --allow-env src/index.ts",
+    "dev": "deno run --watch --allow-net --allow-env src/index.ts"
+  },
+  "compilerOptions": {
+    "lib": ["deno.ns", "deno.window"],
+    "strict": true
+  },
+  "fmt": {
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "deploy": {
+    "org": "syllabai",
+    "app": "fge-relay",
+    "entrypoint": "src/index.ts",
+    "include": ["src/", "deno.json"]
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

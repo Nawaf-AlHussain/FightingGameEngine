@@ -1,0 +1,284 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3572E463-893D-4815-8ECC-E65F3B8C6D90}</ProjectGuid>
+    <RootNamespace>libtari</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>prism</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\DEV\PLATFORMS\WINDOWS\LIBS\SDL2-2.0.7\include;C:\DEV\PLATFORMS\WINDOWS\LIBS\SDL2_image-2.0.1;C:\Program Files (x86)\FMOD SoundSystem;C:\DEV\PLATFORMS\WINDOWS\LIBS\SDL2_ttf-2.0.14;C:\DEV\PLATFORMS\WINDOWS\LIBS\lpng1632;C:\DEV\PLATFORMS\WINDOWS\LIBS\glew-2.1.0\include;C:\DEV\PLATFORMS\WINDOWS\LIBS\zstd\lib;C:\DEV\PLATFORMS\WINDOWS\LIBS\zlib-1.2.11;C:\DEV\PLATFORMS\WINDOWS\LIBS\optick\src;C:\DEV\PLATFORMS\WINDOWS\LIBS\enet-1.3.17\include;C:\DEV\PROJECTS\addons\prism\include;C:\DEV\PROJECTS\addons\prism\external\imgui\inc;C:\DEV\PROJECTS\addons\prism\external\imgui_texteditor\inc</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>C:\DEV\PLATFORMS\WINDOWS\LIBS\SDL2-2.0.7\include;C:\DEV\PLATFORMS\WINDOWS\LIBS\SDL2_image-2.0.1;C:\Program Files (x86)\FMOD SoundSystem;C:\DEV\PLATFORMS\WINDOWS\LIBS\SDL2_ttf-2.0.14;C:\DEV\PLATFORMS\WINDOWS\LIBS\lpng1632;C:\DEV\PLATFORMS\WINDOWS\LIBS\glew-2.1.0\include;C:\DEV\PLATFORMS\WINDOWS\LIBS\zstd\lib;C:\DEV\PLATFORMS\WINDOWS\LIBS\zlib-1.2.11;C:\DEV\PLATFORMS\WINDOWS\LIBS\optick\src;C:\DEV\PLATFORMS\WINDOWS\LIBS\enet-1.3.17\include;C:\DEV\PROJECTS\addons\prism\include;C:\DEV\PROJECTS\addons\prism\external\imgui\inc;C:\DEV\PROJECTS\addons\prism\external\imgui_texteditor\inc</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <OmitFramePointers>
+      </OmitFramePointers>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLEW_STATIC;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\external\imgui_texteditor\inc\imgui_texteditor\imgui_texteditor.h" />
+    <ClInclude Include="..\..\external\imgui\inc\imgui\imgui.h" />
+    <ClInclude Include="..\..\external\imgui\inc\imgui\imgui_impl_opengl2.h" />
+    <ClInclude Include="..\..\external\imgui\inc\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\..\external\imgui\inc\imgui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="..\..\external\imgui\inc\imgui\imgui_impl_sdl2.h" />
+    <ClInclude Include="..\..\external\imgui\inc\imgui\imgui_stdlib.h" />
+    <ClInclude Include="..\..\external\imgui\src\imconfig.h" />
+    <ClInclude Include="..\..\external\imgui\src\imgui_internal.h" />
+    <ClInclude Include="..\..\external\imgui\src\imstb_rectpack.h" />
+    <ClInclude Include="..\..\external\imgui\src\imstb_textedit.h" />
+    <ClInclude Include="..\..\external\imgui\src\imstb_truetype.h" />
+    <ClInclude Include="..\..\include\prism\actorhandler.h" />
+    <ClInclude Include="..\..\include\prism\animation.h" />
+    <ClInclude Include="..\..\include\prism\animationtree.h" />
+    <ClInclude Include="..\..\include\prism\blitz.h" />
+    <ClInclude Include="..\..\include\prism\blitzclick.h" />
+    <ClInclude Include="..\..\include\prism\blitzcollision.h" />
+    <ClInclude Include="..\..\include\prism\blitzmugenanimation.h" />
+    <ClInclude Include="..\..\include\prism\blitzcamerahandler.h" />
+    <ClInclude Include="..\..\include\prism\blitzcomponent.h" />
+    <ClInclude Include="..\..\include\prism\blitzentity.h" />
+    <ClInclude Include="..\..\include\prism\blitzmugensound.h" />
+    <ClInclude Include="..\..\include\prism\blitzparticles.h" />
+    <ClInclude Include="..\..\include\prism\blitzphysics.h" />
+    <ClInclude Include="..\..\include\prism\blitzplatforming.h" />
+    <ClInclude Include="..\..\include\prism\blitztimelineanimation.h" />
+    <ClInclude Include="..\..\include\prism\blitztimelineanimationreader.h" />
+    <ClInclude Include="..\..\include\prism\clipboardhandler.h" />
+    <ClInclude Include="..\..\include\prism\collision.h" />
+    <ClInclude Include="..\..\include\prism\collisionanimation.h" />
+    <ClInclude Include="..\..\include\prism\collisionhandler.h" />
+    <ClInclude Include="..\..\include\prism\compression.h" />
+    <ClInclude Include="..\..\include\prism\datastructures.h" />
+    <ClInclude Include="..\..\include\prism\debug.h" />
+    <ClInclude Include="..\..\include\prism\drawing.h" />
+    <ClInclude Include="..\..\include\prism\errorscreen.h" />
+    <ClInclude Include="..\..\include\prism\file.h" />
+    <ClInclude Include="..\..\include\prism\filereader.h" />
+    <ClInclude Include="..\..\include\prism\framerateselectscreen.h" />
+    <ClInclude Include="..\..\include\prism\windowfocusscreen.h" />
+    <ClInclude Include="..\..\include\prism\geometry.h" />
+    <ClInclude Include="..\..\include\prism\input.h" />
+    <ClInclude Include="..\..\include\prism\introtexthelper.h" />
+    <ClInclude Include="..\..\include\prism\khash.h" />
+    <ClInclude Include="..\..\include\prism\klib\khash.h" />
+    <ClInclude Include="..\..\include\prism\lifebar.h" />
+    <ClInclude Include="..\..\include\prism\loadingscreen.h" />
+    <ClInclude Include="..\..\include\prism\log.h" />
+    <ClInclude Include="..\..\include\prism\logoscreen.h" />
+    <ClInclude Include="..\..\include\prism\lz5.h" />
+    <ClInclude Include="..\..\include\prism\math.h" />
+    <ClInclude Include="..\..\include\prism\memoryhandler.h" />
+    <ClInclude Include="..\..\include\prism\memorypool.h" />
+    <ClInclude Include="..\..\include\prism\memorystack.h" />
+    <ClInclude Include="..\..\include\prism\mugenanimationhandler.h" />
+    <ClInclude Include="..\..\include\prism\mugenanimationreader.h" />
+    <ClInclude Include="..\..\include\prism\mugendefreader.h" />
+    <ClInclude Include="..\..\include\prism\mugendefwriter.h" />
+    <ClInclude Include="..\..\include\prism\mugeneffecttexthandler.h" />
+    <ClInclude Include="..\..\include\prism\mugenscriptparser.h" />
+    <ClInclude Include="..\..\include\prism\mugensoundfilereader.h" />
+    <ClInclude Include="..\..\include\prism\mugenspritefilereader.h" />
+    <ClInclude Include="..\..\include\prism\mugentexthandler.h" />
+    <ClInclude Include="..\..\include\prism\netplay.h" />
+    <ClInclude Include="..\..\include\prism\numberpopuphandler.h" />
+    <ClInclude Include="..\..\include\prism\optionhandler.h" />
+    <ClInclude Include="..\..\include\prism\physics.h" />
+    <ClInclude Include="..\..\include\prism\physicshandler.h" />
+    <ClInclude Include="..\..\include\prism\profiling.h" />
+    <ClInclude Include="..\..\include\prism\saveload.h" />
+    <ClInclude Include="..\..\include\prism\screeneffect.h" />
+    <ClInclude Include="..\..\include\prism\script.h" />
+    <ClInclude Include="..\..\include\prism\sound.h" />
+    <ClInclude Include="..\..\include\prism\soundeffect.h" />
+    <ClInclude Include="..\..\include\prism\stagehandler.h" />
+    <ClInclude Include="..\..\include\prism\stlutil.h" />
+    <ClInclude Include="..\..\include\prism\storyboard.h" />
+    <ClInclude Include="..\..\include\prism\system.h" />
+    <ClInclude Include="..\..\include\prism\texthandler.h" />
+    <ClInclude Include="..\..\include\prism\texture.h" />
+    <ClInclude Include="..\..\include\prism\texturepool.h" />
+    <ClInclude Include="..\..\include\prism\thread.h" />
+    <ClInclude Include="..\..\include\prism\timer.h" />
+    <ClInclude Include="..\..\include\prism\tweening.h" />
+    <ClInclude Include="..\..\include\prism\windows\debugimgui_win.h" />
+    <ClInclude Include="..\..\include\prism\windows\debugimgui_texteditor_win.h" />
+    <ClInclude Include="..\..\include\prism\windows\imgui\filemanager.h" />
+    <ClInclude Include="..\..\include\prism\windows\romdisk_win.h" />
+    <ClInclude Include="..\..\include\prism\wrapper.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\actorhandler.cpp" />
+    <ClCompile Include="..\..\animation.cpp" />
+    <ClCompile Include="..\..\animationtree.cpp" />
+    <ClCompile Include="..\..\blitzcamerahandler.cpp" />
+    <ClCompile Include="..\..\blitzclick.cpp" />
+    <ClCompile Include="..\..\blitzcollision.cpp" />
+    <ClCompile Include="..\..\blitzcomponent.cpp" />
+    <ClCompile Include="..\..\blitzentity.cpp" />
+    <ClCompile Include="..\..\blitzmugenanimation.cpp" />
+    <ClCompile Include="..\..\blitzmugensound.cpp" />
+    <ClCompile Include="..\..\blitzparticles.cpp" />
+    <ClCompile Include="..\..\blitzphysics.cpp" />
+    <ClCompile Include="..\..\blitzplatforming.cpp" />
+    <ClCompile Include="..\..\blitztimelineanimation.cpp" />
+    <ClCompile Include="..\..\blitztimelineanimationreader.cpp" />
+    <ClCompile Include="..\..\clipboardhandler.cpp" />
+    <ClCompile Include="..\..\collision.cpp" />
+    <ClCompile Include="..\..\collisionanimation.cpp" />
+    <ClCompile Include="..\..\collisionhandler.cpp" />
+    <ClCompile Include="..\..\compression.cpp" />
+    <ClCompile Include="..\..\datastructures.cpp" />
+    <ClCompile Include="..\..\debug.cpp" />
+    <ClCompile Include="..\..\drawing.cpp" />
+    <ClCompile Include="..\..\errorscreen.cpp" />
+    <ClCompile Include="..\..\external\imgui_texteditor\src\imgui_texteditor.cpp" />
+    <ClCompile Include="..\..\external\imgui\src\imgui.cpp" />
+    <ClCompile Include="..\..\external\imgui\src\imgui_demo.cpp" />
+    <ClCompile Include="..\..\external\imgui\src\imgui_draw.cpp" />
+    <ClCompile Include="..\..\external\imgui\src\imgui_impl_opengl2.cpp" />
+    <ClCompile Include="..\..\external\imgui\src\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\..\external\imgui\src\imgui_impl_sdl2.cpp" />
+    <ClCompile Include="..\..\external\imgui\src\imgui_stdlib.cpp" />
+    <ClCompile Include="..\..\external\imgui\src\imgui_tables.cpp" />
+    <ClCompile Include="..\..\external\imgui\src\imgui_widgets.cpp" />
+    <ClCompile Include="..\..\file.cpp" />
+    <ClCompile Include="..\..\filereader.cpp" />
+    <ClCompile Include="..\..\geometry.cpp" />
+    <ClCompile Include="..\..\input.cpp" />
+    <ClCompile Include="..\..\introtexthelper.cpp" />
+    <ClCompile Include="..\..\lifebar.cpp" />
+    <ClCompile Include="..\..\loadingscreen.cpp" />
+    <ClCompile Include="..\..\log.cpp" />
+    <ClCompile Include="..\..\logoscreen.cpp" />
+    <ClCompile Include="..\..\lz5.cpp" />
+    <ClCompile Include="..\..\math.cpp" />
+    <ClCompile Include="..\..\memoryhandler.cpp" />
+    <ClCompile Include="..\..\memorypool.cpp" />
+    <ClCompile Include="..\..\memorystack.cpp" />
+    <ClCompile Include="..\..\mugenanimationhandler.cpp" />
+    <ClCompile Include="..\..\mugenanimationreader.cpp" />
+    <ClCompile Include="..\..\mugendefreader.cpp" />
+    <ClCompile Include="..\..\mugendefwriter.cpp" />
+    <ClCompile Include="..\..\mugeneffecttexthandler.cpp" />
+    <ClCompile Include="..\..\mugenscriptparser.cpp" />
+    <ClCompile Include="..\..\mugensoundfilereader.cpp" />
+    <ClCompile Include="..\..\mugenspritefilereader.cpp" />
+    <ClCompile Include="..\..\mugentexthandler.cpp" />
+    <ClCompile Include="..\..\numberpopuphandler.cpp" />
+    <ClCompile Include="..\..\optionhandler.cpp" />
+    <ClCompile Include="..\..\physics.cpp" />
+    <ClCompile Include="..\..\physicshandler.cpp" />
+    <ClCompile Include="..\..\profiling.cpp" />
+    <ClCompile Include="..\..\screeneffect.cpp" />
+    <ClCompile Include="..\..\script.cpp" />
+    <ClCompile Include="..\..\soundeffect.cpp" />
+    <ClCompile Include="..\..\stagehandler.cpp" />
+    <ClCompile Include="..\..\stlutil.cpp" />
+    <ClCompile Include="..\..\storyboard.cpp" />
+    <ClCompile Include="..\..\system.cpp" />
+    <ClCompile Include="..\..\texthandler.cpp" />
+    <ClCompile Include="..\..\texture.cpp" />
+    <ClCompile Include="..\..\texturepool.cpp" />
+    <ClCompile Include="..\..\timer.cpp" />
+    <ClCompile Include="..\..\tweening.cpp" />
+    <ClCompile Include="..\..\wrapper.cpp" />
+    <ClCompile Include="..\debugimgui_win.cpp" />
+    <ClCompile Include="..\debugimgui_texteditor_win.cpp" />
+    <ClCompile Include="..\drawing_win.cpp" />
+    <ClCompile Include="..\file_win.cpp" />
+    <ClCompile Include="..\framerateselect_win.cpp" />
+    <ClCompile Include="..\windowfocusscreen_win.cpp" />
+    <ClCompile Include="..\imgui\filemanager.cpp" />
+    <ClCompile Include="..\input_win.cpp" />
+    <ClCompile Include="..\logoscreen_win.cpp" />
+    <ClCompile Include="..\log_win.cpp" />
+    <ClCompile Include="..\math_win.cpp" />
+    <ClCompile Include="..\memoryhandler_win.cpp" />
+    <ClCompile Include="..\netplay_win.cpp" />
+    <ClCompile Include="..\romdisk_win.cpp" />
+    <ClCompile Include="..\saveload_win.cpp" />
+    <ClCompile Include="..\screeneffect_win.cpp" />
+    <ClCompile Include="..\soundeffect_win.cpp" />
+    <ClCompile Include="..\sound_win.cpp" />
+    <ClCompile Include="..\system_win.cpp" />
+    <ClCompile Include="..\texture_win.cpp" />
+    <ClCompile Include="..\thread_win.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

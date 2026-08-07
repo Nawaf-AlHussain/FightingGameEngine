@@ -1,0 +1,19 @@
+; ============================================================================
+; f-4x6.def — TrueType font definition for MUGEN text rendering
+; ============================================================================
+; References Liberation Sans TTF. The engine loads this via addMugenFont2()
+; which reads the [Def] section for type, file, size, and spacing.
+;
+; See: engine/DolmexicaInfinite/addons/prism/mugentexthandler.cpp addMugenFont2()
+
+[Def]
+; Font type: "truetype" or "bitmap"
+type = truetype
+; Path to the TTF file (relative — addMugenFont2 sets working directory)
+file = LiberationSans-Regular.ttf
+; Font size: width, height, 0 (width is ignored for truetype, height = pixel size)
+size = 16, 16, 0
+; Character spacing: x, y, 0
+spacing = 0, 0, 0
+; Render offset: x, y, 0
+offset = 0, 0, 0

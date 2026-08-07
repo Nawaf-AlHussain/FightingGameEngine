@@ -1,0 +1,76 @@
+TARGET = 1ST_READ
+
+OBJS += romdisk.o
+OPTFLAGS=-O3 -fomit-frame-pointer -fno-delayed-branch -DDREAMCAST -Wall -fpermissive -Wno-format-overflow
+KOS_CPPFLAGS+= $(OPTFLAGS)
+CXXFLAGS += -DNDEBUG -std=c++17 -Wall -O2
+KOS_ROMDISK_DIR = romdisk_boot
+
+complete: make_filesystem build_develop
+
+romdisk: clean build_images to_romdisk build_romdisk
+
+assets: clean_filesystem build_images
+
+rd_assets: clean_filesystem build_images to_romdisk
+
+code: build_develop
+
+rd_code: build_romdisk
+
+build_images: make_filesystem copy_assets copy_debugfolder actions_user
+
+make_filesystem:
+	-mkdir romdisk_boot
+	-mkdir filesystem
+	-mkdir filesystem/assets
+	-mkdir filesystem/debug
+
+copy_assets:
+	cp -r assets/* filesystem/assets
+
+copy_debugfolder:
+	cp -r debug/* filesystem/debug
+
+to_romdisk:
+	cp -r filesystem/* romdisk_boot
+	
+clean: clean_user clean_filesystem clean_general
+	
+clean_filesystem:
+	-rm -r -f filesystem/assets
+	-rm -r -f filesystem/debug
+	-rm -r -f filesystem/logo
+	-rm -r -f filesystem/effects
+	-rm -r -f romdisk_boot
+	-rm -f romdisk.img
+
+clean_general:
+	-rm -f $(TARGET).elf $(OBJS)
+	-rm -f $(TARGET).BIN
+	-rm -f assets/debug/*.pkg
+
+build_develop: $(OBJS) 
+	kos-c++ -fno-operator-names -fno-rtti -fno-exceptions -std=c++17 \
+	-DDEVELOP -I/home/captaindc/dc/kos/../extensions/include -D_arch_dreamcast \
+	-DNDEBUG \
+	-D_arch_sub_pristine -Wall -g -fno-builtin -fno-strict-aliasing  -ml -m4-single-only \
+	-O2 -Wl,--gc-sections -L/home/captaindc/dc/kos/lib/dreamcast \
+	-L/home/captaindc/dc/kos/addons/lib/dreamcast -L/home/captaindc/dc/kos/../kos-ports/lib \
+	-o $(TARGET).elf $(KOS_START) \
+	$(OBJS) -lkmg $(OPTIONAL_LIBS) -lprism -lzstd -lpng -lz -ltremor -lm $(OBJEXTRA) $(KOS_LIBS)
+	$(KOS_OBJCOPY) -O binary $(TARGET).elf $(TARGET).BIN
+
+build_romdisk: $(OBJS) 
+	$(KOS_CC) $(KOS_CFLAGS) -DDEVELOP -I${KOS_BASE}/../extensions/include $(KOS_LDFLAGS) \
+	-o $(TARGET).elf $(KOS_START) \
+	$(OBJS) -lkmg $(OPTIONAL_LIBS) -lprism -lzstd -lpng -lz -ltremor -lm $(OBJEXTRA) $(KOS_LIBS)
+	$(KOS_OBJCOPY) -O binary $(TARGET).elf $(TARGET).BIN
+
+run:
+	sudo /opt/toolchains/dc/bin/dc-tool-ip -t 192.168.0.4 -c . -x 1ST_READ.BIN 
+	
+run_in_assets:
+	sudo /opt/toolchains/dc/bin/dc-tool-ip -t 192.168.0.4 -c ./assets -x 1ST_READ.BIN 
+	
+include $(KOS_BASE)/Makefile.rules

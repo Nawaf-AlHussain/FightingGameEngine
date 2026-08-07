@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Phase 0.5 — Input Bridge Test</title>
+  <style>
+    body {
+      margin: 0; padding: 20px;
+      background: #1a1a1a; color: #eee;
+      font-family: -apple-system, system-ui, sans-serif;
+    }
+    h1 { font-size: 18px; margin: 0 0 8px; }
+    h2 { font-size: 14px; margin: 16px 0 8px; color: #aaa; }
+    .layout { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
+    .canvas-wrap {
+      background: #000; border: 1px solid #444; min-height: 360px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    canvas { max-width: 100%; image-rendering: pixelated; }
+    .panel {
+      background: #2a2a2a; padding: 12px; border: 1px solid #444;
+      font-size: 13px; line-height: 1.6;
+    }
+    .status-line { display: flex; gap: 8px; align-items: center; margin: 4px 0; }
+    .status-line .label { color: #aaa; min-width: 110px; }
+    .status-line .value { font-family: ui-monospace, monospace; color: #6f6; }
+    .status-line .value.bad { color: #f66; }
+    .status-line .value.warn { color: #fc6; }
+
+    button {
+      background: #3a3; color: #fff; border: none; padding: 6px 14px;
+      font-size: 13px; cursor: pointer; border-radius: 3px; margin: 2px;
+    }
+    button.secondary { background: #555; }
+    button.danger { background: #a33; }
+    button:disabled { background: #555; cursor: not-allowed; }
+
+    .log {
+      background: #111; border: 1px solid #444; padding: 8px; height: 180px;
+      overflow-y: auto; font-family: ui-monospace, monospace; font-size: 12px;
+      color: #ccc;
+    }
+    .log .err { color: #f88; }
+    .log .ok { color: #8f8; }
+    .log .info { color: #88f; }
+
+    .help {
+      font-size: 12px; color: #999; margin-top: 12px; line-height: 1.7;
+    }
+    .help code { background: #333; padding: 1px 4px; border-radius: 2px; color: #6f6; }
+  </style>
+</head>
+<body>
+  <h1>Phase 0.5 — Input Bridge Test Harness</h1>
+  <p style="font-size:13px;color:#aaa;margin:0 0 12px">
+    Verifies that <code style="color:#6f6">_setExternalPlayerInput()</code> works.
+    Loads game.js, waits for runtime ready, then injects input strings into Player 2 (controller index 1).
+    Watch the canvas — Player 2 should respond to injected inputs.
+  </p>
+
+  <div class="layout">
+    <div>
+      <div class="canvas-wrap" id="canvas-wrap">
+        <div style="color:#888;font-size:13px" id="canvas-placeholder">Loading WASM...</div>
+      </div>
+      <h2>Test Controls</h2>
+      <div>
+        <button data-input="F">Forward (F)</button>
+        <button data-input="B">Back (B)</button>
+        <button data-input="U">Up (U)</button>
+        <button data-input="D">Down (D)</button>
+        <button data-input="a">Punch A (a)</button>
+        <button data-input="b">Punch B (b)</button>
+        <button data-input="c">Punch C (c)</button>
+        <br>
+        <button data-input="Fa" class="secondary">Forward + Punch (Fa)</button>
+        <button data-input="Db" class="secondary">Down + Punch (Db)</button>
+        <button data-input="" class="danger">Release All</button>
+      </div>
+      <div class="help">
+        <strong>Expected behavior:</strong><br>
+        1. WASM loads → status shows <code>READY</code><br>
+        2. Click any input button → input is injected via <code>_setExternalPlayerInput(1, "X")</code><br>
+        3. Watch the canvas — Player 2 (right side) should respond (walk forward, punch, jump, etc.)<br>
+        4. Click "Release All" to clear input<br>
+        <br>
+        <strong>Manual test:</strong> open DevTools console and call<br>
+        <code>Module._setExternalPlayerInput(1, "Fa")</code> directly.<br>
+        <br>
+        <strong>If status shows <span style="color:#f66">FAIL</span>:</strong> the input bridge is broken — check that the WASM was rebuilt after the Phase 0.5 input.cpp changes.
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="status-line">
+          <span class="label">WASM status:</span>
+          <span class="value" id="status">loading...</span>
+        </div>
+        <div class="status-line">
+          <span class="label">_setExternalPlayerInput:</span>
+          <span class="value" id="fn-status">—</span>
+        </div>
+        <div class="status-line">
+          <span class="label">_isExternalInputActive:</span>
+          <span class="value" id="fn-status-2">—</span>
+        </div>
+        <div class="status-line">
+          <span class="label">_disableExternalInput:</span>
+          <span class="value" id="fn-status-3">—</span>
+        </div>
+        <div class="status-line">
+          <span class="label">Last injection:</span>
+          <span class="value" id="last-injection">—</span>
+        </div>
+        <div class="status-line">
+          <span class="label">P2 active:</span>
+          <span class="value" id="p2-active">—</span>
+        </div>
+      </div>
+
+      <h2>Event Log</h2>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Logging ----------
+    const logEl = document.getElementById('log');
+    function log(msg, level) {
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.className = level || '';
+      div.textContent = `[${time}] ${msg}`;
+      logEl.appendChild(div);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    const statusEl = document.getElementById('status');
+    const fnStatusEl = document.getElementById('fn-status');
+    const fnStatus2El = document.getElementById('fn-status-2');
+    const fnStatus3El = document.getElementById('fn-status-3');
+    const lastInjectionEl = document.getElementById('last-injection');
+    const p2ActiveEl = document.getElementById('p2-active');
+    const canvasPlaceholder = document.getElementById('canvas-placeholder');
+
+    function setStatus(text, cls) {
+      statusEl.textContent = text;
+      statusEl.className = 'value ' + (cls || '');
+    }
+
+    log('Initializing test harness', 'info');
+
+    // ---------- FIX-2 + FIX-PRELOAD: configure Module BEFORE loading script ----------
+    const runtimeReady = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('WASM runtime init timeout after 30s'));
+      }, 30000);
+
+      window.Module = {
+        locateFile: function (path) {
+          return '/game/' + path;
+        },
+        print: function(text) { log('[print] ' + text, 'info'); },
+        printErr: function(text) { log('[printErr] ' + text, 'err'); },
+        noInitialRun: true,
+        noExitRuntime: true,
+        preRun: [function() {
+          // Set SDL_GL attributes for proper WebGL rendering
+          if (typeof SDL !== 'undefined' && SDL.GL) {
+            SDL.GL.setAttributes = function(a) {
+              a.preserveDrawingBuffer = true;
+            };
+          }
+        }],
+        onRuntimeInitialized: function () {
+          clearTimeout(timeout);
+          log('WASM runtime initialized', 'ok');
+          resolve(window.Module);
+        },
+        onAborted: function (reason) {
+          clearTimeout(timeout);
+          log('WASM aborted: ' + reason, 'err');
+          reject(new Error('WASM aborted: ' + reason));
+        },
+        canvas: (() => {
+          const c = document.createElement('canvas');
+          c.id = 'canvas';
+          c.width = 640; c.height = 480;
+          document.getElementById('canvas-wrap').appendChild(c);
+          return c;
+        })(),
+      };
+
+      // FIX-PRELOAD: Wait for WASM compilation before FS_preloadFile runs.
+      // See wasm-loader.ts for full explanation.
+      const wasmReady = new Promise((resolveWasm) => {
+        const ci = setInterval(() => {
+          if (window.Module && typeof window.Module._main === 'function') {
+            clearInterval(ci);
+            resolveWasm();
+          }
+        }, 5);
+        setTimeout(() => clearInterval(ci), 30000);
+      });
+
+      const patchInterval = setInterval(() => {
+        const M = window.Module;
+        if (!M || typeof M.FS_preloadFile !== 'function' || M._fsPreloadPatched) return;
+        const orig = M.FS_preloadFile;
+        M._fsPreloadPatched = true;
+        M.FS_preloadFile = async function(...args) {
+          await wasmReady;
+          return orig.apply(M, args);
+        };
+        log('FS_preloadFile patched', 'info');
+        clearInterval(patchInterval);
+      }, 5);
+      setTimeout(() => clearInterval(patchInterval), 30000);
+    });
+
+    // ---------- Load game.js ----------
+    const script = document.createElement('script');
+    script.src = '/game/game.js';
+    script.async = true;
+    script.onerror = () => {
+      log('Failed to load /game/game.js — run: npm run build:wasm', 'err');
+      setStatus('FAIL (no game.js)', 'bad');
+    };
+    document.head.appendChild(script);
+
+    runtimeReady.then((Module) => {
+      // Verify exported functions exist
+      const hasSetInput = typeof Module._setExternalPlayerInput === 'function';
+      const hasIsActive = typeof Module._isExternalInputActive === 'function';
+      const hasDisable = typeof Module._disableExternalInput === 'function';
+
+      fnStatusEl.textContent = hasSetInput ? 'OK' : 'MISSING';
+      fnStatusEl.className = 'value ' + (hasSetInput ? '' : 'bad');
+      fnStatus2El.textContent = hasIsActive ? 'OK' : 'MISSING';
+      fnStatus2El.className = 'value ' + (hasIsActive ? '' : 'bad');
+      fnStatus3El.textContent = hasDisable ? 'OK' : 'MISSING';
+      fnStatus3El.className = 'value ' + (hasDisable ? '' : 'bad');
+
+      if (!hasSetInput) {
+        setStatus('FAIL (no _setExternalPlayerInput)', 'bad');
+        log('Input bridge not exported. Check EXPORTED_FUNCTIONS in build-wasm.sh.', 'err');
+        return;
+      }
+
+      setStatus('READY', '');
+
+      // Canvas was already attached to DOM in Module setup
+      const emCanvas = document.getElementById('canvas');
+      if (emCanvas) {
+        canvasPlaceholder.style.display = 'none';
+        log('Canvas ready (id=canvas, ' + emCanvas.width + 'x' + emCanvas.height + ')', 'ok');
+      } else {
+        log('No canvas found', 'err');
+      }
+
+      // Start the engine with a direct match (bypasses text-dependent menu screens)
+      log('Starting direct match (Songoku vs Vegeta, DMjmansion)...', 'info');
+      try {
+        Module.ccall('startDirectMatch', 'void', ['string', 'string', 'string'], ['Songoku', 'Vegeta', 'DMjmansion.def']);
+      } catch (e) {
+        log('Engine _startDirectMatch() threw: ' + (e.message || e), 'err');
+      }
+
+      // Check P2 active status
+      function updateP2Status() {
+        if (hasIsActive) {
+          try {
+            const active = Module._isExternalInputActive(1);
+            p2ActiveEl.textContent = active ? 'YES' : 'NO';
+            p2ActiveEl.className = 'value ' + (active ? 'warn' : '');
+          } catch (e) {
+            p2ActiveEl.textContent = 'err: ' + e.message;
+            p2ActiveEl.className = 'value bad';
+          }
+        }
+      }
+      setInterval(updateP2Status, 500);
+    }).catch((err) => {
+      setStatus('FAIL (' + err.message + ')', 'bad');
+      log('WASM init failed: ' + err.message, 'err');
+    });
+
+    // ---------- Input injection ----------
+    function inject(inputStr) {
+      if (!window.Module || typeof window.Module._setExternalPlayerInput !== 'function') {
+        log('Cannot inject — Module not ready', 'err');
+        return;
+      }
+      try {
+        window.Module._setExternalPlayerInput(1, inputStr);
+        lastInjectionEl.textContent = JSON.stringify(inputStr);
+        lastInjectionEl.className = 'value';
+        log(`Injected: _setExternalPlayerInput(1, ${JSON.stringify(inputStr)})`, 'info');
+      } catch (e) {
+        log('Injection failed: ' + e.message, 'err');
+      }
+    }
+
+    document.querySelectorAll('button[data-input]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const inp = btn.getAttribute('data-input');
+        inject(inp);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+; ============================================================================
+; stage0.def — Default stage for Fighting Game Engine
+; ============================================================================
+; Minimal stage definition with no custom sprites or backgrounds.
+; The engine renders a solid color background (black by default).
+; This is a placeholder — a real stage needs an SFF sprite file with
+; background elements.
+;
+; See: engine/DolmexicaInfinite/stage.cpp
+
+[Info]
+name = "Training Stage"
+displayname = "Training Stage"
+versiondate = 07,17,2026
+mugenversion = 1.0
+author = "FGE"
+localcoord = 320, 240
+
+[Camera]
+startx = 0
+starty = 0
+boundleft = -150
+boundright = 150
+boundhigh = -50
+boundlow = 0
+tension = 50
+tensionhigh = 60
+tensionlow = 0
+verticalfollow = 0.2
+floortension = 0
+overdrawhigh = 0
+overdrawlow = 0
+cuthigh = 0
+cutlow = 0
+startzoom = 1.0
+zoomout = 1.0
+zoomin = 1.0
+ytension = 50
+yboundhigh = 0
+yboundlow = 0
+
+[PlayerInfo]
+p1startx = -50
+p1starty = 0
+p1facing = 1
+p2startx = 50
+p2starty = 0
+p2facing = -1
+leftbound = -1000
+rightbound = 1000
+topbound = 0
+botbound = 0
+
+[Bound]
+screenleft = 15
+screenright = 15
+topz = 0
+botz = 0
+topscale = 1.0
+botscale = 1.0
+
+[StageInfo]
+zoffset = 190
+zoffsetlink = 
+autoturn = 1
+resetBG = 1
+localcoord = 320, 240
+xscale = 1.0
+yscale = 1.0
+
+[Shadow]
+intensity = 0
+color = 0, 0, 0
+yscale = 0.1
+fade.range = 0, 0
+
+[Reflection]
+intensity = 0
+
+[Music]
+bgmusic = 
+bgvolume = 100
+
+; Note: No [BGdef] section — the engine logs a warning and renders
+; no background sprites. The stage will show a black background.
+; To add a real background, create an SFF sprite file and add:
+;   [BGdef]
+;   spr = stages/stage0.sff
+;   debugbg = 0
+; Then define individual background layers:
+;   [BG 0]
+;   type = normal
+;   spriteno = 0, 0
+;   layerno = 0
+;   start = 0, 0
+;   delta = 1, 1

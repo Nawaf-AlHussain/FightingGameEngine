@@ -1,0 +1,21 @@
+include Makefile.common
+
+OBJS += dc/drawing_dc.o dc/texture_dc.o dc/input_dc.o \
+dc/framerateselect_dc.o dc/file_dc.o dc/math_dc.o dc/system_dc.o dc/log_dc.o \
+dc/saveload_dc.o dc/soundeffect_dc.o dc/sound_dc.o dc/memoryhandler_dc.o dc/netplay_dc.o \
+dc/screeneffect_dc.o dc/logoscreen_dc.o dc/thread_dc.o windows/windowfocusscreen_win.o
+
+defaultall: create_addons_link $(OBJS) subdirs linklib
+
+KOS_CPPFLAGS += -W -Wall -DDREAMCAST -I ./include -I${KOS_PORTS}/zstd/lib -lpng -fpermissive -Wno-format-overflow
+CXXFLAGS += -DNDEBUG -std=c++17 -Wall -O2
+
+include $(KOS_BASE)/addons/Makefile.prefab
+
+create_addons_link:
+	rm -f -r $(KOS_BASE)/addons/include/prism
+	ln -s /mnt/c/DEV/PROJECTS/addons/prism/include/prism $(KOS_BASE)/addons/include/prism
+
+clean:
+	-rm -f *.o
+	-rm -r dc/*.o

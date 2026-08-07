@@ -1,0 +1,167 @@
+; ============================================================================
+; system.def — Motif definition for Fighting Game Engine
+; ============================================================================
+; This is the "motif" file — defines the UI layout for system screens
+; (title, select, versus, etc.). A full MUGEN motif has hundreds of
+; layout parameters; this minimal version provides just the [Files]
+; section so the engine can locate select.def and fight.def.
+;
+; Screen layout sections ([Title Info], [Select Info], etc.) are omitted
+; — the engine uses internal defaults for missing sections. Text may not
+; render correctly without proper font files, but the game loop will run.
+;
+; See: engine/DolmexicaInfinite/intro.cpp, titlescreen.cpp, characterselectscreen.cpp
+
+[Info]
+name = "Fighting Game Engine"
+author = "FGE"
+versiondate = 07,17,2026
+mugenversion = 1.0
+localcoord = 320, 240
+
+[Files]
+; Sprite file for system graphics — SFF v1 with PCX sprites
+spr = data/system.sff
+; Sound file for system sounds (empty — engine handles gracefully)
+snd = 
+; Logo storyboard (intro animation before title)
+; Empty = skip logo
+logo.storyboard = 
+; Intro storyboard (plays after logo, before title)
+; Empty = skip intro
+intro.storyboard = 
+; Character select definition
+select = data/select.def
+; Fight screen definition (lifebars, hit sparks, etc.)
+fight = data/fight.def
+; Fonts — MUGEN .fnt or .def files for text rendering
+; References font/f-4x6.def which is a TrueType definition pointing to
+; LiberationSans-Regular.ttf (bundled in game.data)
+font0 = font/f-4x6.def
+font1 = font/f-4x6.def
+font2 = font/f-4x6.def
+font3 = font/f-4x6.def
+
+; ============================================================================
+; Screen Layouts
+; ============================================================================
+; The following sections define the visual layout of each system screen.
+; Values are in MUGEN coordinate space (320x240 by default).
+; Omitted sections use engine defaults.
+
+[Title Info]
+; Title screen layout — minimal defaults
+fadein.time = 10
+fadeout.time = 10
+menu.pos = 160, 160
+menu.item.font = 0
+menu.item.active.font = 0
+menu.item.spacing = 0, 20
+
+[Select Info]
+; Character select screen layout — minimal defaults
+fadein.time = 10
+fadeout.time = 10
+rows = 2
+columns = 2
+wrapping = 1
+pos = 80, 60
+showemptyboxes = 0
+moveoveremptyboxes = 0
+cell.size = 60, 60
+cell.spacing = 2
+cell.bg.spr = 
+cell.random.spr = 
+cell.random.switchtime = 4
+p1.cursor.startcell = 0, 0
+p1.cursor.active.spr = 
+p1.cursor.done.spr = 
+p1.cursor.move.snd = 
+p1.cursor.done.snd = 
+p1.random.move.snd = 
+p2.cursor.startcell = 0, 1
+p2.cursor.active.spr = 
+p2.cursor.done.spr = 
+p2.cursor.move.snd = 
+p2.cursor.done.snd = 
+p2.random.move.snd = 
+stage.move.snd = 
+stage.done.snd = 
+cancel.snd = 
+portrait.offset = 0, 0
+portrait.scale = 1, 1
+title.offset = 160, 16
+title.font = 0
+p1.face.offset = 16, 200
+p1.face.scale = 1, 1
+p1.face.facing = 1
+p2.face.offset = 304, 200
+p2.face.scale = 1, 1
+p2.face.facing = -1
+p1.name.offset = 16, 224
+p1.name.font = 0
+p2.name.offset = 304, 224
+p2.name.font = 0
+stage.pos = 160, 224
+stage.font = 0
+timer.pos = 160, 16
+timer.font = 0
+timer.bg.spr = 
+
+[Versus Screen]
+time = 100
+fadein.time = 20
+fadeout.time = 20
+p1.pos = 60, 120
+p1.facing = 1
+p1.scale = 1, 1
+p2.pos = 260, 120
+p2.facing = -1
+p2.scale = 1, 1
+
+[Demo Mode]
+intro.waitcycles = 1
+title.waittime = 600
+demo.end.time = 1500
+
+[Continue Screen]
+enabled = 1
+pos = 160, 120
+font = 0
+
+[Game Over Screen]
+enabled = 1
+pos = 160, 120
+font = 0
+
+[Win Screen]
+enabled = 1
+pos = 160, 120
+font = 0
+
+[Default Ending]
+enabled = 0
+
+[End Credits]
+enabled = 0
+
+[Survival Results Screen]
+enabled = 1
+pos = 160, 120
+font = 0
+
+[Option Info]
+fadein.time = 10
+fadeout.time = 10
+title.offset = 160, 16
+title.font = 0
+menu.pos = 160, 160
+menu.item.font = 0
+menu.item.active.font = 0
+menu.item.spacing = 0, 20
+
+[Music]
+title.bgm = 
+select.bgm = 
+vs.bgm = 
+victory.bgm = 

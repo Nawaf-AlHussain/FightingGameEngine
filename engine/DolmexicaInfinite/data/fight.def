@@ -1,0 +1,100 @@
+; ============================================================================
+; fight.def — Fight screen definition (lifebars, hit sparks, round announcements)
+; ============================================================================
+; Minimal fight screen definition. The engine reads this for font references
+; and UI element positions during gameplay. Values omitted use engine defaults.
+;
+; See: engine/DolmexicaInfinite/fightscreen.cpp, fightui.cpp
+
+[Info]
+name = "FGE Fight"
+versiondate = 07,17,2026
+mugenversion = 1.0
+localcoord = 320, 240
+
+[Files]
+; Fight sprite file (lifebar graphics, hit sparks, etc.)
+; Empty = no custom fight graphics
+spr =
+sff = fight.sff
+fightfx.sff = fightfx.sff
+fightfx.air = fightfx.air
+; Fight sound file
+snd =
+; Fonts for fight text (round announcements, KO, timer, names, etc.)
+; font0 = font/f-4x6.def (TrueType → LiberationSans-Regular.ttf)
+font0 = font/f-4x6.def
+; font1 = font/f-4x6.def
+; font2 = font/f-4x6.def
+; font3 = font/f-4x6.def
+
+[Lifebar]
+; Player 1 lifebar position and size
+p1.pos = 10, 20
+p1.range = 100, 10
+p1.bg.spr = 
+p1.front.spr = 
+
+; Player 2 lifebar
+p2.pos = 310, 20
+p2.range = 100, 10
+p2.bg.spr = 
+p2.front.spr = 
+
+; Power bars
+p1.power.pos = 10, 40
+p1.power.range = 80, 6
+p1.power.bg.spr = 
+p1.power.front.spr = 
+
+p2.power.pos = 310, 40
+p2.power.range = 80, 6
+p2.power.bg.spr = 
+p2.power.front.spr = 
+
+; Faces (character portraits)
+p1.face.pos = 10, 50
+p1.face.spr = 
+p2.face.pos = 310, 50
+p2.face.spr = 
+
+; Names
+p1.name.pos = 10, 70
+p1.name.font = 0
+p2.name.pos = 310, 70
+p2.name.font = 0
+
+; Timer
+timer.pos = 160, 20
+timer.font = 0
+timer.bg.spr = 
+
+; Round indicator
+round.pos = 160, 100
+round.font = 0
+round.snd = 
+
+; KO / DKO / TO text
+ko.pos = 160, 100
+ko.font = 0
+ko.snd = 
+
+[Round]
+; Round time in ticks (60 ticks = 1 second)
+round.time = 0
+; Number of rounds to win
+match.wins = 2
+match.maxdrawgames = 1
+; Start round announcement
+start.snd = 
+; Fight announcement
+fight.snd = 
+
+[Time]
+; Frame count for various announcements
+intro.time = 0
+fight.time = 0
+ko.time = 0
+slow.time = 0
+over.time = 0
+win.time = 0

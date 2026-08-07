@@ -1,0 +1,526 @@
+;---------------------------------------------------------------------------
+;============================AI専用動作=========================================
+;---------------------------------------------------------------------------
+;CPU用しゃがみガード
+[Statedef 131]
+type    = C
+physics = C
+
+[State 131, コモン]
+type = ChangeAnim
+trigger1 = Anim != 131
+value = 131
+
+[State 131, CPU用含む]
+type = ChangeState
+trigger1 = Var(59) = 0
+trigger1 = command != "holddown"
+trigger2 = Var(59) = [1,2]
+trigger2 = p2statetype = A
+trigger2 = time = 1
+value = 130
+
+[State 131, コモン]
+type = ChangeState
+trigger1 = command != "holdback"
+trigger2 = !inguarddist
+value = 140
+
+;ガードエンド
+[Statedef 140]
+type = U
+physics = U
+ctrl = 1
+
+[State 140, コモン1]
+type = ChangeAnim
+trigger1 = Time = 0
+value = 140 + (statetype = C) + (statetype = A)*2
+
+[State 140, コモン2]
+type = StateTypeSet
+trigger1 = Time = 0 && statetype = S
+physics = S
+
+[State 140, コモン3]
+type = StateTypeSet
+trigger1 = Time = 0 && statetype = C
+physics = C
+
+[State 140, コモン4]
+type = StateTypeSet
+trigger1 = Time = 0 && statetype = A
+physics = A
+
+[State 140, CPU用含むHtoL]
+type = StateTypeSet
+trigger1 = Var(59) = 0
+trigger1 = statetype = S && command = "holddown"
+trigger2 = Var(59) = [1,2]
+trigger2 = statetype = S && p2statetype = C
+statetype = C
+physics = C
+
+[State 140, CPU用含むLtoH]
+type = StateTypeSet
+trigger1 = Var(59) = 0
+trigger1 = statetype = C && command != "holddown"
+trigger2 = Var(59) = [1,2]
+trigger2 = statetype = C && p2statetype = A
+trigger3 = Var(59) = [1,2]
+trigger3 = statetype = C && p2statetype = S
+trigger3 = Var(58) = [0,19]
+statetype = S
+physics = S
+
+;立ちガードヒット
+[Statedef 150]
+type    = S
+movetype= H
+physics = N
+velset = 0,0
+
+[State 150, コモン1]
+type = ChangeAnim
+trigger1 = 1
+value = 150
+
+[State 150, 人間]
+type = ChangeState
+trigger1 = Var(59) = 0
+trigger1 = HitShakeOver
+value = 151 + 2*(command = "holddown")
+
+[State 150, CPU]
+type = ChangeState
+trigger1 = Var(59) = [1,2]
+trigger1 = HitShakeOver
+value = 151 + 2*(p2statetype = C)
+
+[State 150, CPU用含むHtoL]
+type = StateTypeSet
+trigger1 = Var(59) = 0
+trigger1 = statetype = S && command = "holddown"
+trigger2 = Var(59) = [1,2]
+trigger2 = statetype = S && p2statetype = C
+statetype = C
+physics = C
+
+[State 150, CPU用含むLtoH]
+type = StateTypeSet
+trigger1 = Var(59) = 0
+trigger1 = statetype = C && command != "holddown"
+trigger2 = Var(59) = [1,2]
+trigger2 = statetype = C && p2statetype = A
+trigger3 = Var(59) = [1,2]
+trigger3 = statetype = C && p2statetype = S
+trigger3 = Var(58) = [0,19]
+statetype = S
+physics = S
+
+[State 150, コモン2]
+type = ForceFeedback
+trigger1 = time = 0
+waveform = square
+time = 3
+
+[Statedef 151]
+type    = S
+movetype= H
+physics = S
+anim = 150
+
+[State 151, コモン1]
+type = HitVelSet
+trigger1 = Time = 0
+x = 1
+
+[State 151, コモン2]
+type = VelSet
+trigger1 = Time = GetHitVar(slidetime)
+trigger2 = HitOver
+x = 0
+
+[State 151, コモン3]
+type = CtrlSet
+trigger1 = Time = GetHitVar(ctrltime)
+value = 1
+
+[State 151, CPU用含むHtoL]
+type = StateTypeSet
+trigger1 = Var(59) = 0
+trigger1 = statetype = S && command = "holddown"
+trigger2 = Var(59) = [1,2]
+trigger2 = statetype = S && p2statetype = C
+statetype = C
+physics = C
+
+[State 151, CPU用含むLtoH]
+type = StateTypeSet
+trigger1 = Var(59) = 0
+trigger1 = statetype = C && command != "holddown"
+trigger2 = Var(59) = [1,2]
+trigger2 = statetype = C && p2statetype = A
+trigger3 = Var(59) = [1,2]
+trigger3 = statetype = C && p2statetype = S
+trigger3 = Var(58) = [0,19]
+statetype = S
+physics = S
+
+[State 151, コモン4]
+type = ChangeState
+trigger1 = HitOver
+value = 130
+ctrl = 1
+
+
+;しゃがみガードヒット
+[Statedef 152]
+type    = C
+movetype= H
+physics = N
+velset = 0,0
+
+[State 152, コモン1]
+type = ChangeAnim
+trigger1 = 1
+value = 151
+
+[State 152, 人間]
+type = ChangeState
+trigger1 = Var(59) = 0
+trigger1 = HitShakeOver
+value = 151 + 2*(command = "holddown")
+
+[State 152, CPU]
+type = ChangeState
+trigger1 = Var(59) = [1,2]
+trigger1 = HitShakeOver
+value = 151 + 2*(p2statetype = C)
+
+[State 152, CPU用含むHtoL]
+type = StateTypeSet
+trigger1 = Var(59) = 0
+trigger1 = statetype = S && command = "holddown"
+trigger2 = Var(59) = [1,2]
+trigger2 = statetype = S && p2statetype = C
+statetype = C
+physics = C
+
+[State 152, CPU用含むLtoH]
+type = StateTypeSet
+trigger1 = Var(59) = 0
+trigger1 = statetype = C && command != "holddown"
+trigger2 = Var(59) = [1,2]
+trigger2 = statetype = C && p2statetype = A
+trigger3 = Var(59) = [1,2]
+trigger3 = statetype = C && p2statetype = S
+trigger3 = Var(58) = [0,19]
+statetype = S
+physics = S
+
+[State 152, コモン2]
+type = ForceFeedback
+trigger1 = time = 0
+waveform = square
+time = 4
+
+[Statedef 153]
+type    = C
+movetype= H
+physics = C
+anim = 151
+
+[State 153, コモン1]
+type = HitVelSet
+trigger1 = Time = 0
+x = 1
+
+[State 153, コモン2]
+type = VelSet
+trigger1 = Time = GetHitVar(slidetime)
+trigger2 = HitOver
+x = 0
+
+[State 153, コモン3]
+type = CtrlSet
+trigger1 = Time = GetHitVar(ctrltime)
+value = 1
+
+[State 153, CPU用含むHtoL]
+type = StateTypeSet
+trigger1 = Var(59) = 0
+trigger1 = statetype = S && command = "holddown"
+trigger2 = Var(59) = [1,2]
+trigger2 = statetype = S && p2statetype = C
+statetype = C
+physics = C
+
+[State 153, CPU用含むLtoH]
+type = StateTypeSet
+trigger1 = Var(59) = 0
+trigger1 = statetype = C && command != "holddown"
+trigger2 = Var(59) = [1,2]
+trigger2 = statetype = C && p2statetype = A
+trigger3 = Var(59) = [1,2]
+trigger3 = statetype = C && p2statetype = S
+trigger3 = Var(58) = [0,19]
+statetype = S
+physics = S
+
+[State 153, コモン4]
+type = ChangeState
+trigger1 = HitOver
+value = 131
+ctrl = 1
+
+;---------------------------------------------------------------------------
+[Statedef 8000,頭突き待機]
+type    = C
+physics = C
+anim = 11
+sprpriority = 0
+
+[State 8000, オートターン]
+type = Turn
+trigger1 = P2Dist X < 0
+
+[State 8000, アニメ変化]
+type = ChangeAnim
+trigger1 = Anim = 11
+trigger1 = AnimTime = 0
+value = 12
+
+[State 8000, アニメ変化]
+type = ChangeAnim
+trigger1 = Anim = 12
+trigger1 = AnimTime = 0
+value = 0
+
+[State 8000, 立ち状態]
+type = StateTypeSet
+trigger1 = anim = 0
+statetype = S
+physics = S
+
+[State 8000, 立ちへ]
+type = ChangeState
+trigger1 = Time >= 30
+value = 0
+ctrl = 1
+
+;---------------------------------------------------------------------------
+[Statedef 8040,AIジャンプ・予備動作]
+type = S
+physics = S
+anim = 40
+ctrl = 0
+sprpriority = 1
+
+[State 8040, 1]
+type = VarSet
+trigger1 = Time = 0
+sysvar(1) = 0
+
+[State 8040, 2]
+type = VarSet
+trigger1 = Time = 0
+var(5) = 0
+
+[State 8040, longjump];ロングジャンプ
+type = VarSet
+trigger1 = 1
+var(5) = 1
+
+[State 8040, 4]
+type = VarSet
+trigger1 = 1
+sysvar(1) = 1
+
+[State 8040, 6]
+type = VelSet
+trigger1 = AnimTime = 0
+x = const(velocity.jump.fwd.x)
+y = const(velocity.jump.y)
+
+[State 8040, 10]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 8050
+
+;--------------------------------
+[Statedef 8050,AIジャンプ・上昇]
+type    = A
+physics = A
+
+[State 8050, 1]
+type = VarSet
+trigger1 = Time = 0
+sysvar(1) = 0
+
+[State 8050, 2]
+type = VelSet
+trigger1 = Time = 0 && Var(5)
+x = 6
+y = -12
+
+[State 8050, 3]
+type = ChangeAnim
+trigger1 = Time = 0
+value = 42
+
+[State 8050,line1];スピードライン１
+type = Explod
+triggerall = Var(5) && Vel X != 0
+trigger1 = Time % 4 = 0 && Time < 30  
+anim = 4053  
+postype = p1
+pos = 10, -60
+velocity = 0, 0
+accel = 0, 0
+random = 20, 20
+removetime = -2
+ownpal = 1
+
+[State 8050, line2];スピードライン２
+type = Explod
+triggerall = Var(5) && Vel X != 0
+trigger1 = Time % 4 = 0 && Time < 30  
+anim = 4052  
+postype = p1
+pos = -5, -40
+velocity = 0, 0
+accel = 0, 0
+random = 20, 20
+removetime = -2
+ownpal = 1
+
+[State 8050, line3];スピードライン３
+type = Explod
+triggerall = Var(5) && Vel X != 0
+trigger1 = Time % 4 = 0 && Time < 30  
+anim = 4051  
+postype = p1
+pos = -10, -60
+velocity = 0, 0
+accel = 0, 0
+random = 20, 20
+removetime = -2
+ownpal = 1
+
+[State 8050, line4];スピードライン４
+type = Explod
+triggerall = Var(5) && Vel X != 0
+trigger1 = Time % 4 = 0 && Time > 22 && Time < 34
+anim = 4050
+postype = p1
+pos = 5, -40
+velocity = 0, 0
+accel = 0, 0
+random = 40, 15
+removetime = -2
+ownpal = 1
+
+;---------------------------------------------------------------------------
+[Statedef 8100,エネルギー波待機]
+type = S
+physics = S
+anim = 0
+velset = 0,0
+sprpriority = 0
+
+[State 8100, オートターン]
+type = Turn
+trigger1 = P2Dist X < 0
+
+[State 8100, 待機解除]
+type = ChangeState
+trigger1 = time > 10
+value = 0
+ctrl = 1
+
+;---------------------------------------------------------------------------
+[Statedef 8200,追撃待機]
+type = S
+movetype = I
+physics = S
+anim = 0
+sprpriority = 0
+
+[State 8200, オートターン]
+type = Turn
+trigger1 = P2Dist X < 0
+
+[State 8200, しゃがみ状態]
+type = ChangeAnim
+trigger1 = time = 0
+trigger1 = prevstateno = 450
+value = 11
+
+[State 8200, しゃがみ状態]
+type = StateTypeSet
+trigger1 = Anim = 11
+statetype = C
+physics = C
+
+[State 8200, 待機解除]
+type = ChangeState
+trigger1 = time > 10
+value = ifelse(Anim=11,12,0)
+ctrl = 1
+
+;---------------------------------------------------------------------------
+[Statedef 9741,AI認識ヘルパー]
+ctrl=0
+
+[State 9741,間違いで本体が来たら立ちへ移行]
+type=selfstate
+trigger1=!ishelper
+value=0
+
+[State 9741,プレイヤー判定]
+type=varset
+trigger1=command="up"&&root,command="up"
+trigger2=command="down"&&root,command="down"
+trigger3=command="back"&&root,command="back"
+trigger4=command="fwd"&&root,command="fwd"
+trigger5=command="a"&&root,command="a"
+trigger6=command="b"&&root,command="b"
+trigger7=command="c"&&root,command="c"
+trigger8=command="x"&&root,command="x"
+trigger9=command="y"&&root,command="y"
+trigger10=command="z"&&root,command="z"
+trigger11=command="start"&&root,command="start"
+var(59)=-1
+
+[State 9741,立ったら消失]
+Type = DestroySelf
+triggerAll = isHelper
+Trigger1 = root,var(59)||var(59)=-1
+trigger2=command="up"&&root,command="up"
+trigger3=command="down"&&root,command="down"
+trigger4=command="back"&&root,command="back"
+trigger5=command="fwd"&&root,command="fwd"
+trigger6=command="a"&&root,command="a"
+trigger7=command="b"&&root,command="b"
+trigger8=command="c"&&root,command="c"
+trigger9=command="x"&&root,command="x"
+trigger10=command="y"&&root,command="y"
+trigger11=command="z"&&root,command="z"
+trigger12=command="start"&&root,command="start"
+
+[State 9741,ﾌﾗｸﾞON]
+type=varset
+triggerall=var(59)!=-1
+trigger1=root,command="up"
+trigger2=root,command="down"
+trigger3=root,command="back"
+trigger4=root,command="fwd"
+trigger5=root,command="a"
+trigger6=root,command="b"
+trigger7=root,command="c"
+trigger8=root,command="x"
+trigger9=root,command="y"
+trigger10=root,command="z"
+trigger11=root,command="start"
+var(59)=1
