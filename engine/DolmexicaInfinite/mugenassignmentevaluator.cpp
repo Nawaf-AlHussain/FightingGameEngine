@@ -2360,9 +2360,47 @@ static AssignmentReturnValue* evaluateStageVarArrayAssignment(AssignmentReturnVa
         else if ("info.name" == var) {
                 ret = makeStringAssignmentReturn(getDreamStageName());
         }
+        // Phase 3 Task 3 — stagevar(camera.*) sub-keys (raw, untransformed)
+        else if ("camera.boundleft" == var)   ret = makeFloatAssignmentReturn(getDreamStageBoundLeftRaw());
+        else if ("camera.boundright" == var)  ret = makeFloatAssignmentReturn(getDreamStageBoundRightRaw());
+        else if ("camera.boundhigh" == var)   ret = makeFloatAssignmentReturn(getDreamStageBoundHighRaw());
+        else if ("camera.boundlow" == var)    ret = makeFloatAssignmentReturn(getDreamStageBoundLowRaw());
+        else if ("camera.verticalfollow" == var) ret = makeFloatAssignmentReturn(getDreamStageVerticalFollowRaw());
+        else if ("camera.floortension" == var) ret = makeFloatAssignmentReturn(getDreamStageFloorTensionRaw());
+        else if ("camera.tension" == var)     ret = makeFloatAssignmentReturn(getDreamStageTensionRaw());
+        else if ("camera.startzoom" == var)   ret = makeFloatAssignmentReturn(getDreamStageStartZoomRaw());
+        else if ("camera.zoomout" == var)     ret = makeFloatAssignmentReturn(getDreamStageZoomOutRaw());
+        else if ("camera.zoomin" == var)      ret = makeFloatAssignmentReturn(getDreamStageZoomInRaw());
+        // Phase 3 Task 3 — stagevar(stageinfo.*) sub-keys
+        else if ("stageinfo.localcoordx" == var) ret = makeNumberAssignmentReturn(getDreamStageLocalCoordX());
+        else if ("stageinfo.localcoordy" == var) ret = makeNumberAssignmentReturn(getDreamStageLocalCoordY());
+        else if ("stageinfo.zoffset" == var)  ret = makeFloatAssignmentReturn(getDreamStageZOffset());
+        else if ("stageinfo.autoturn" == var) ret = makeNumberAssignmentReturn(getDreamStageAutoTurn());
+        else if ("stageinfo.resetbg" == var)  ret = makeNumberAssignmentReturn(getDreamStageResetBG());
+        else if ("stageinfo.xscale" == var)   ret = makeFloatAssignmentReturn(getDreamStageXScale());
+        else if ("stageinfo.yscale" == var)   ret = makeFloatAssignmentReturn(getDreamStageYScale());
+        // Phase 3 Task 3 — stagevar(playerinfo.*) sub-keys
+        else if ("playerinfo.leftbound" == var)  ret = makeFloatAssignmentReturn(getDreamStagePlayerLeftBound());
+        else if ("playerinfo.rightbound" == var) ret = makeFloatAssignmentReturn(getDreamStagePlayerRightBound());
+        else if ("playerinfo.p1startx" == var)   ret = makeFloatAssignmentReturn(getDreamStageP1StartX());
+        else if ("playerinfo.p2startx" == var)   ret = makeFloatAssignmentReturn(getDreamStageP2StartX());
+        else if ("playerinfo.p1starty" == var)   ret = makeFloatAssignmentReturn(getDreamStageP1StartY());
+        else if ("playerinfo.p2starty" == var)   ret = makeFloatAssignmentReturn(getDreamStageP2StartY());
+        else if ("playerinfo.p1facing" == var)   ret = makeNumberAssignmentReturn(getDreamStageP1Facing());
+        else if ("playerinfo.p2facing" == var)   ret = makeNumberAssignmentReturn(getDreamStageP2Facing());
+        // Phase 3 Task 3 — stagevar(bound.*) sub-keys (screen edge bounds)
+        else if ("bound.screenleft" == var)  ret = makeFloatAssignmentReturn(getDreamStageBoundScreenLeftRaw());
+        else if ("bound.screenright" == var) ret = makeFloatAssignmentReturn(getDreamStageBoundScreenRightRaw());
+        // Phase 3 Task 3 — stagevar(shadow.*) sub-keys
+        else if ("shadow.intensity" == var) ret = makeNumberAssignmentReturn(getDreamStageShadowIntensityRaw());
+        else if ("shadow.color.r" == var)   ret = makeNumberAssignmentReturn(getDreamStageShadowColorR());
+        else if ("shadow.color.g" == var)   ret = makeNumberAssignmentReturn(getDreamStageShadowColorG());
+        else if ("shadow.color.b" == var)   ret = makeNumberAssignmentReturn(getDreamStageShadowColorB());
+        else if ("shadow.xshear" == var)    ret = makeFloatAssignmentReturn(getDreamStageShadowXShear());
+        else if ("shadow.yscale" == var)    ret = makeFloatAssignmentReturn(getDreamStageShadowScaleY());
         else {
                 logWarningFormat("Unknown stage variable %s. Returning bottom.", var);
-                ret = makeBottomAssignmentReturn(); 
+                ret = makeBottomAssignmentReturn();
         }
         assert(ret);
 
@@ -2705,6 +2743,17 @@ static AssignmentReturnValue* const720pFunction(DreamMugenAssignment** tIndexAss
 // (e.g. inputtime(B), inputtime(a)). Delegates to the per-controller input
 // buffer tracked in mugencommandhandler.cpp.
 static AssignmentReturnValue* inputTimeFunction(DreamMugenAssignment** tIndexAssignment, DreamPlayer* tPlayer, int* tIsStatic) { return evaluateInputTimeArrayAssignment(evaluateAssignmentDependency(tIndexAssignment, tPlayer, tIsStatic), tPlayer, tIsStatic); }
+
+// Phase 2 — map(name) trigger. Ikemen GO named-float maps. Takes a string
+// argument (map name) and returns the float value stored on the player.
+// Missing keys return 0.0.
+static AssignmentReturnValue* mapFunction(DreamMugenAssignment** tIndexAssignment, DreamPlayer* tPlayer, int* tIsStatic) {
+        AssignmentReturnValue* arg = evaluateAssignmentDependency(tIndexAssignment, tPlayer, tIsStatic);
+        string mapName;
+        convertAssignmentReturnToString(mapName, arg);
+        *tIsStatic = 0;
+        return makeFloatAssignmentReturn(getPlayerMap(tPlayer, mapName.c_str()));
+}
 static AssignmentReturnValue* externalFileFunctionF(DreamMugenAssignment** tIndexAssignment, DreamPlayer* tPlayer, int* tIsStatic) { return evaluateExternalFileAnimationArrayAssignment('f', evaluateAssignmentDependency(tIndexAssignment, tPlayer, tIsStatic)); }
 static AssignmentReturnValue* externalFileFunctionS(DreamMugenAssignment** tIndexAssignment, DreamPlayer* tPlayer, int* tIsStatic) { return evaluateExternalFileAnimationArrayAssignment('s', evaluateAssignmentDependency(tIndexAssignment, tPlayer, tIsStatic)); }
 static AssignmentReturnValue* numTargetArrayFunction(DreamMugenAssignment** tIndexAssignment, DreamPlayer* tPlayer, int* tIsStatic) { return evaluateNumTargetArrayAssignment(evaluateAssignmentDependency(tIndexAssignment, tPlayer, tIsStatic), tPlayer, tIsStatic); }
@@ -2771,6 +2820,7 @@ static void setupArrayAssignments() {
         gVariableHandler.mArrays["const480p"] = const480pFunction;
         gVariableHandler.mArrays["const720p"] = const720pFunction;
         gVariableHandler.mArrays["inputtime"] = inputTimeFunction;
+        gVariableHandler.mArrays["map"] = mapFunction;
         gVariableHandler.mArrays["f"] = externalFileFunctionF;
         gVariableHandler.mArrays["s"] = externalFileFunctionS;
         gVariableHandler.mArrays["numtarget"] = numTargetArrayFunction;

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <map>
+#include <string>
+
 #include <prism/datastructures.h>
 
 #include <prism/mugenspritefilereader.h>
@@ -139,6 +142,50 @@ struct DreamPlayer {
         int mSystemVars[100];
         double mFloatVars[100];
         double mSystemFloatVars[100];
+
+        // Phase 2 — Ikemen-style named float maps (map trigger / MapSet / MapAdd).
+        // Allows characters to store arbitrary named float values per player.
+        // See Ikemen GO's MapSet/MapAdd and the `map(name)` trigger.
+        std::map<std::string, double> mMaps;
+
+        // Phase 3 Task 5 — AssertSpecial flag storage (34 Ikemen-extension flags).
+        // These are stored and queryable via isasserted(flag), but NOT enforced
+        // in gameplay functions. Enforcement caused movement bugs last time;
+        // per-frame reset timing needs to be designed before enforcement.
+        int mNoKOFlag;                  // "noko" — prevent KO
+        int mAnimFreezeFlag;            // "animfreeze" — freeze animation
+        int mNoHitDamageFlag;           // "nohitdamage" — disable hit damage
+        int mNoFallDefenseUpFlag;       // "nofalldefenseup"
+        int mNoCrouchMoveFlag;          // "nocrouchmove"
+        int mNoStandMoveFlag;           // "nostandmove"
+        int mNoAirJumpFlag;             // "noairjump"
+        int mNoJumpFlag;                // "nojump"
+        int mNoProjFlag;                // "noproj"
+        int mNoClipFlag;                // "noclip"
+        int mNoHardcodedKeysFlag;       // "nohardcodedkeys"
+        int mNoBrakeFlag;               // "nobrake"
+        int mNoMPCostFlag;              // "nompcost"
+        int mNoGuardBarDisplayFlag;     // "noguardbardisplay"
+        int mNoComboDisplayFlag;        // "nocombodisplay"
+        int mNoFatigueFlag;             // "nofatigue"
+        int mNoAILevelFlag;             // "noailevel"
+        int mNoLifebarActionFlag;       // "nolifebaraction"
+        int mNoPauseRestoreFlag;        // "nopauserestore"
+        int mNoMP3Flag;                 // "nomp3"
+        int mNoPowerBarDisplayFlag;     // "nopowerbardisplay"
+        int mNoHitBoxFlag;              // "nohitbox"
+        int mNoGuardBoxFlag;            // "noguardbox"
+        int mNoAttackBoxFlag;           // "noattackbox"
+        int mNoDebugInfoFlag;           // "nodebuginfo"
+        int mNoStateDisplayFlag;        // "nostatedisplay"
+        int mNoFaceFlag;                // "noface"
+        int mNoTurnFlag;                // "noturn"
+        int mNoCounterFlag;             // "nocounter"
+        int mNoDizzyFlag;               // "nodizzy"
+        int mNoGuardDamageFlag;         // "noguarddamage"
+        int mNoRedLifeFlag;             // "noredlife"
+        int mNoGuardSparkFlag;          // "noguardspark"
+        int mNoHitSparkFlag;            // "nohitspark"
 
         int mCommandID;
         RegisteredMugenStateMachine* mRegisteredStateMachine;
@@ -349,6 +396,49 @@ void addPlayerFloatVariable(DreamPlayer* p, int tIndex, double tValue);
 double getPlayerSystemFloatVariable(DreamPlayer* p, int tIndex);
 void setPlayerSystemFloatVariable(DreamPlayer* p, int tIndex, double tValue);
 void addPlayerSystemFloatVariable(DreamPlayer* p, int tIndex, double tValue);
+
+// Phase 2 — Map system accessors (Ikemen GO MapSet/MapAdd/map trigger)
+double getPlayerMap(DreamPlayer* p, const char* tName);
+void setPlayerMap(DreamPlayer* p, const char* tName, double tValue);
+void addPlayerMap(DreamPlayer* p, const char* tName, double tValue);
+void resetPlayerMaps(DreamPlayer* p);
+
+// Phase 3 Task 5 — AssertSpecial flag setters (34 Ikemen-extension flags).
+// Flags are stored and queryable via isasserted(flag), but NOT enforced.
+void setPlayerNoKOFlag(DreamPlayer* p);
+void setPlayerAnimFreezeFlag(DreamPlayer* p);
+void setPlayerNoHitDamageFlag(DreamPlayer* p);
+void setPlayerNoFallDefenseUpFlag(DreamPlayer* p);
+void setPlayerNoCrouchMoveFlag(DreamPlayer* p);
+void setPlayerNoStandMoveFlag(DreamPlayer* p);
+void setPlayerNoAirJumpFlag(DreamPlayer* p);
+void setPlayerNoJumpFlag(DreamPlayer* p);
+void setPlayerNoProjFlag(DreamPlayer* p);
+void setPlayerNoClipFlag(DreamPlayer* p);
+void setPlayerNoHardcodedKeysFlag(DreamPlayer* p);
+void setPlayerNoBrakeFlag(DreamPlayer* p);
+void setPlayerNoMPCostFlag(DreamPlayer* p);
+void setPlayerNoGuardBarDisplayFlag(DreamPlayer* p);
+void setPlayerNoComboDisplayFlag(DreamPlayer* p);
+void setPlayerNoFatigueFlag(DreamPlayer* p);
+void setPlayerNoAILevelFlag(DreamPlayer* p);
+void setPlayerNoLifebarActionFlag(DreamPlayer* p);
+void setPlayerNoPauseRestoreFlag(DreamPlayer* p);
+void setPlayerNoMP3Flag(DreamPlayer* p);
+void setPlayerNoPowerBarDisplayFlag(DreamPlayer* p);
+void setPlayerNoHitBoxFlag(DreamPlayer* p);
+void setPlayerNoGuardBoxFlag(DreamPlayer* p);
+void setPlayerNoAttackBoxFlag(DreamPlayer* p);
+void setPlayerNoDebugInfoFlag(DreamPlayer* p);
+void setPlayerNoStateDisplayFlag(DreamPlayer* p);
+void setPlayerNoFaceFlag(DreamPlayer* p);
+void setPlayerNoTurnFlag(DreamPlayer* p);
+void setPlayerNoCounterFlag(DreamPlayer* p);
+void setPlayerNoDizzyFlag(DreamPlayer* p);
+void setPlayerNoGuardDamageFlag(DreamPlayer* p);
+void setPlayerNoRedLifeFlag(DreamPlayer* p);
+void setPlayerNoGuardSparkFlag(DreamPlayer* p);
+void setPlayerNoHitSparkFlag(DreamPlayer* p);
 
 int getPlayerTimeInState(DreamPlayer* p);
 int getPlayerAnimationNumber(DreamPlayer* p);

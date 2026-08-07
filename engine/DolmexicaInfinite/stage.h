@@ -77,6 +77,43 @@ double getDreamStageShadowScaleY();
 double getDreamStageReflectionTransparency();
 double getDreamStageShadowFadeRangeFactor(double tPosY, int tCoordinateP);
 
+// Phase 3 Task 3 — stagevar sub-keys. Raw accessors that return the unparsed
+// stage values (no coordinate-system transform). Used by stagevar(camera.*),
+// stagevar(stageinfo.*), stagevar(playerinfo.*), stagevar(bound.*), and
+// stagevar(shadow.*) sub-key triggers.
+double getDreamStageBoundLeftRaw();
+double getDreamStageBoundRightRaw();
+double getDreamStageBoundHighRaw();
+double getDreamStageBoundLowRaw();
+double getDreamStageVerticalFollowRaw();
+double getDreamStageFloorTensionRaw();
+double getDreamStageTensionRaw();
+double getDreamStageStartZoomRaw();
+double getDreamStageZoomOutRaw();
+double getDreamStageZoomInRaw();
+int getDreamStageLocalCoordX();
+int getDreamStageLocalCoordY();
+double getDreamStageZOffset();
+int getDreamStageAutoTurn();
+int getDreamStageResetBG();
+double getDreamStageXScale();
+double getDreamStageYScale();
+double getDreamStagePlayerLeftBound();
+double getDreamStagePlayerRightBound();
+double getDreamStageP1StartX();
+double getDreamStageP2StartX();
+double getDreamStageP1StartY();
+double getDreamStageP2StartY();
+int getDreamStageP1Facing();
+int getDreamStageP2Facing();
+int getDreamStageShadowIntensityRaw();
+int getDreamStageShadowColorR();
+int getDreamStageShadowColorG();
+int getDreamStageShadowColorB();
+double getDreamStageShadowXShear();
+double getDreamStageBoundScreenLeftRaw();
+double getDreamStageBoundScreenRightRaw();
+
 void setDreamStageNoAutomaticCameraMovement();
 void setDreamStageAutomaticCameraMovement();
 

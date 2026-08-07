@@ -921,6 +921,44 @@ double getDreamStageReflectionTransparency()
         return gStageData.mReflection.mIntensity / 256.0;
 }
 
+// Phase 3 Task 3 — stagevar sub-keys. Raw accessors returning unparsed stage
+// values (no coordinate-system transform). The stagevar(camera.*),
+// stagevar(stageinfo.*), stagevar(playerinfo.*), stagevar(bound.*), and
+// stagevar(shadow.*) triggers in mugenassignmentevaluator.cpp call these
+// directly so characters can query the stage definition at runtime.
+double getDreamStageBoundLeftRaw()    { return gStageData.mCamera.mBoundLeft; }
+double getDreamStageBoundRightRaw()   { return gStageData.mCamera.mBoundRight; }
+double getDreamStageBoundHighRaw()    { return gStageData.mCamera.mBoundHigh; }
+double getDreamStageBoundLowRaw()     { return gStageData.mCamera.mBoundLow; }
+double getDreamStageVerticalFollowRaw() { return gStageData.mCamera.mVerticalFollow; }
+double getDreamStageFloorTensionRaw() { return gStageData.mCamera.mFloorTension; }
+double getDreamStageTensionRaw()      { return gStageData.mCamera.mTension; }
+double getDreamStageStartZoomRaw()    { return gStageData.mCamera.mStartZoom; }
+double getDreamStageZoomOutRaw()      { return gStageData.mCamera.mZoomOut; }
+double getDreamStageZoomInRaw()       { return gStageData.mCamera.mZoomIn; }
+int getDreamStageLocalCoordX()        { return gStageData.mStageInfo.mLocalCoordinates.x; }
+int getDreamStageLocalCoordY()        { return gStageData.mStageInfo.mLocalCoordinates.y; }
+double getDreamStageZOffset()         { return gStageData.mStageInfo.mZOffset; }
+int getDreamStageAutoTurn()           { return gStageData.mStageInfo.mAutoturn; }
+int getDreamStageResetBG()            { return gStageData.mStageInfo.mResetBG; }
+double getDreamStageXScale()          { return gStageData.mStageInfo.mScale.x; }
+double getDreamStageYScale()          { return gStageData.mStageInfo.mScale.y; }
+double getDreamStagePlayerLeftBound() { return gStageData.mPlayerInfo.mLeftBound; }
+double getDreamStagePlayerRightBound(){ return gStageData.mPlayerInfo.mRightBound; }
+double getDreamStageP1StartX()        { return gStageData.mPlayerInfo.mP1Start.x; }
+double getDreamStageP2StartX()        { return gStageData.mPlayerInfo.mP2Start.x; }
+double getDreamStageP1StartY()        { return gStageData.mPlayerInfo.mP1Start.y; }
+double getDreamStageP2StartY()        { return gStageData.mPlayerInfo.mP2Start.y; }
+int getDreamStageP1Facing()           { return gStageData.mPlayerInfo.mP1Facing; }
+int getDreamStageP2Facing()           { return gStageData.mPlayerInfo.mP2Facing; }
+int getDreamStageShadowIntensityRaw() { return gStageData.mShadow.mIntensity; }
+int getDreamStageShadowColorR()       { return gStageData.mShadow.mColor.x; }
+int getDreamStageShadowColorG()       { return gStageData.mShadow.mColor.y; }
+int getDreamStageShadowColorB()       { return gStageData.mShadow.mColor.z; }
+double getDreamStageShadowXShear()    { return gStageData.mShadow.mXShear; }
+double getDreamStageBoundScreenLeftRaw()  { return gStageData.mBound.mScreenLeft; }
+double getDreamStageBoundScreenRightRaw() { return gStageData.mBound.mScreenRight; }
+
 double getDreamStageShadowFadeRangeFactor(double tPosY, int tCoordinateP)
 {
         auto fadeRange = getDreamStageShadowFadeRange(tCoordinateP);

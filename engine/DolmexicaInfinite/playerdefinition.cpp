@@ -346,6 +346,47 @@ static void resetHelperState(DreamPlayer* p) {
                 initHitDefAttributeSlot(&p->mNotHitBy[i]);
                 p->mDustClouds[i].mLastDustTime = 0;
         }
+
+        // Phase 2 — clear named maps when helper state is reset (matches Ikemen
+        // behavior of resetting map values for fresh helpers).
+        resetPlayerMaps(p);
+
+        // Phase 3 Task 5 — initialize the 34 AssertSpecial extension flags to 0.
+        // These are stored but NOT enforced (enforcement caused movement bugs).
+        p->mNoKOFlag = 0;
+        p->mAnimFreezeFlag = 0;
+        p->mNoHitDamageFlag = 0;
+        p->mNoFallDefenseUpFlag = 0;
+        p->mNoCrouchMoveFlag = 0;
+        p->mNoStandMoveFlag = 0;
+        p->mNoAirJumpFlag = 0;
+        p->mNoJumpFlag = 0;
+        p->mNoProjFlag = 0;
+        p->mNoClipFlag = 0;
+        p->mNoHardcodedKeysFlag = 0;
+        p->mNoBrakeFlag = 0;
+        p->mNoMPCostFlag = 0;
+        p->mNoGuardBarDisplayFlag = 0;
+        p->mNoComboDisplayFlag = 0;
+        p->mNoFatigueFlag = 0;
+        p->mNoAILevelFlag = 0;
+        p->mNoLifebarActionFlag = 0;
+        p->mNoPauseRestoreFlag = 0;
+        p->mNoMP3Flag = 0;
+        p->mNoPowerBarDisplayFlag = 0;
+        p->mNoHitBoxFlag = 0;
+        p->mNoGuardBoxFlag = 0;
+        p->mNoAttackBoxFlag = 0;
+        p->mNoDebugInfoFlag = 0;
+        p->mNoStateDisplayFlag = 0;
+        p->mNoFaceFlag = 0;
+        p->mNoTurnFlag = 0;
+        p->mNoCounterFlag = 0;
+        p->mNoDizzyFlag = 0;
+        p->mNoGuardDamageFlag = 0;
+        p->mNoRedLifeFlag = 0;
+        p->mNoGuardSparkFlag = 0;
+        p->mNoHitSparkFlag = 0;
 }
 
 static void loadPlayerState(DreamPlayer* p) {
@@ -2441,6 +2482,63 @@ void addPlayerSystemFloatVariable(DreamPlayer* p, int tIndex, double tValue)
         setPlayerSystemFloatVariable(p, tIndex, cur);
 }
 
+// Phase 2 — Map system accessors (Ikemen GO MapSet/MapAdd/map trigger).
+// Named float values per player. Missing keys default to 0.0.
+double getPlayerMap(DreamPlayer* p, const char* tName) {
+        if (!tName) return 0.0;
+        auto it = p->mMaps.find(tName);
+        if (it != p->mMaps.end()) return it->second;
+        return 0.0;
+}
+void setPlayerMap(DreamPlayer* p, const char* tName, double tValue) {
+        if (!tName) return;
+        p->mMaps[tName] = tValue;
+}
+void addPlayerMap(DreamPlayer* p, const char* tName, double tValue) {
+        if (!tName) return;
+        p->mMaps[tName] += tValue;
+}
+void resetPlayerMaps(DreamPlayer* p) { p->mMaps.clear(); }
+
+// Phase 3 Task 5 — AssertSpecial flag setters (34 Ikemen-extension flags).
+// Flags are stored and queryable via isasserted(flag), but NOT enforced.
+// Enforcement caused movement bugs in updateAirJumping/updateJumping/etc.
+// last time; per-frame reset timing must be designed before enforcement.
+void setPlayerNoKOFlag(DreamPlayer* p) { p->mNoKOFlag = 1; }
+void setPlayerAnimFreezeFlag(DreamPlayer* p) { p->mAnimFreezeFlag = 1; }
+void setPlayerNoHitDamageFlag(DreamPlayer* p) { p->mNoHitDamageFlag = 1; }
+void setPlayerNoFallDefenseUpFlag(DreamPlayer* p) { p->mNoFallDefenseUpFlag = 1; }
+void setPlayerNoCrouchMoveFlag(DreamPlayer* p) { p->mNoCrouchMoveFlag = 1; }
+void setPlayerNoStandMoveFlag(DreamPlayer* p) { p->mNoStandMoveFlag = 1; }
+void setPlayerNoAirJumpFlag(DreamPlayer* p) { p->mNoAirJumpFlag = 1; }
+void setPlayerNoJumpFlag(DreamPlayer* p) { p->mNoJumpFlag = 1; }
+void setPlayerNoProjFlag(DreamPlayer* p) { p->mNoProjFlag = 1; }
+void setPlayerNoClipFlag(DreamPlayer* p) { p->mNoClipFlag = 1; }
+void setPlayerNoHardcodedKeysFlag(DreamPlayer* p) { p->mNoHardcodedKeysFlag = 1; }
+void setPlayerNoBrakeFlag(DreamPlayer* p) { p->mNoBrakeFlag = 1; }
+void setPlayerNoMPCostFlag(DreamPlayer* p) { p->mNoMPCostFlag = 1; }
+void setPlayerNoGuardBarDisplayFlag(DreamPlayer* p) { p->mNoGuardBarDisplayFlag = 1; }
+void setPlayerNoComboDisplayFlag(DreamPlayer* p) { p->mNoComboDisplayFlag = 1; }
+void setPlayerNoFatigueFlag(DreamPlayer* p) { p->mNoFatigueFlag = 1; }
+void setPlayerNoAILevelFlag(DreamPlayer* p) { p->mNoAILevelFlag = 1; }
+void setPlayerNoLifebarActionFlag(DreamPlayer* p) { p->mNoLifebarActionFlag = 1; }
+void setPlayerNoPauseRestoreFlag(DreamPlayer* p) { p->mNoPauseRestoreFlag = 1; }
+void setPlayerNoMP3Flag(DreamPlayer* p) { p->mNoMP3Flag = 1; }
+void setPlayerNoPowerBarDisplayFlag(DreamPlayer* p) { p->mNoPowerBarDisplayFlag = 1; }
+void setPlayerNoHitBoxFlag(DreamPlayer* p) { p->mNoHitBoxFlag = 1; }
+void setPlayerNoGuardBoxFlag(DreamPlayer* p) { p->mNoGuardBoxFlag = 1; }
+void setPlayerNoAttackBoxFlag(DreamPlayer* p) { p->mNoAttackBoxFlag = 1; }
+void setPlayerNoDebugInfoFlag(DreamPlayer* p) { p->mNoDebugInfoFlag = 1; }
+void setPlayerNoStateDisplayFlag(DreamPlayer* p) { p->mNoStateDisplayFlag = 1; }
+void setPlayerNoFaceFlag(DreamPlayer* p) { p->mNoFaceFlag = 1; }
+void setPlayerNoTurnFlag(DreamPlayer* p) { p->mNoTurnFlag = 1; }
+void setPlayerNoCounterFlag(DreamPlayer* p) { p->mNoCounterFlag = 1; }
+void setPlayerNoDizzyFlag(DreamPlayer* p) { p->mNoDizzyFlag = 1; }
+void setPlayerNoGuardDamageFlag(DreamPlayer* p) { p->mNoGuardDamageFlag = 1; }
+void setPlayerNoRedLifeFlag(DreamPlayer* p) { p->mNoRedLifeFlag = 1; }
+void setPlayerNoGuardSparkFlag(DreamPlayer* p) { p->mNoGuardSparkFlag = 1; }
+void setPlayerNoHitSparkFlag(DreamPlayer* p) { p->mNoHitSparkFlag = 1; }
+
 int getPlayerTimeInState(DreamPlayer* p)
 {
         return getDreamRegisteredStateTimeInState(p->mRegisteredStateMachine);
@@ -2931,6 +3029,43 @@ int isPlayerAsserted(DreamPlayer* p, const char* tFlagName)
                 // These are global flags, not per-player. Would need stage handler queries.
                 return 0;
         }
+        // Phase 3 Task 5 — Ikemen-extension AssertSpecial flags (34 flags).
+        // Stored and queryable but NOT enforced (enforcement caused movement
+        // bugs; per-frame reset timing must be designed before enforcement).
+        else if (flag == "noko") return p->mNoKOFlag;
+        else if (flag == "animfreeze") return p->mAnimFreezeFlag;
+        else if (flag == "nohitdamage") return p->mNoHitDamageFlag;
+        else if (flag == "nofalldefenseup") return p->mNoFallDefenseUpFlag;
+        else if (flag == "nocrouchmove") return p->mNoCrouchMoveFlag;
+        else if (flag == "nostandmove") return p->mNoStandMoveFlag;
+        else if (flag == "noairjump") return p->mNoAirJumpFlag;
+        else if (flag == "nojump") return p->mNoJumpFlag;
+        else if (flag == "noproj") return p->mNoProjFlag;
+        else if (flag == "noclip") return p->mNoClipFlag;
+        else if (flag == "nohardcodedkeys") return p->mNoHardcodedKeysFlag;
+        else if (flag == "nobrake") return p->mNoBrakeFlag;
+        else if (flag == "nompcost") return p->mNoMPCostFlag;
+        else if (flag == "noguardbardisplay") return p->mNoGuardBarDisplayFlag;
+        else if (flag == "nocombodisplay") return p->mNoComboDisplayFlag;
+        else if (flag == "nofatigue") return p->mNoFatigueFlag;
+        else if (flag == "noailevel") return p->mNoAILevelFlag;
+        else if (flag == "nolifebaraction") return p->mNoLifebarActionFlag;
+        else if (flag == "nopauserestore") return p->mNoPauseRestoreFlag;
+        else if (flag == "nomp3") return p->mNoMP3Flag;
+        else if (flag == "nopowerbardisplay") return p->mNoPowerBarDisplayFlag;
+        else if (flag == "nohitbox") return p->mNoHitBoxFlag;
+        else if (flag == "noguardbox") return p->mNoGuardBoxFlag;
+        else if (flag == "noattackbox") return p->mNoAttackBoxFlag;
+        else if (flag == "nodebuginfo") return p->mNoDebugInfoFlag;
+        else if (flag == "nostatedisplay") return p->mNoStateDisplayFlag;
+        else if (flag == "noface") return p->mNoFaceFlag;
+        else if (flag == "noturn") return p->mNoTurnFlag;
+        else if (flag == "nocounter") return p->mNoCounterFlag;
+        else if (flag == "nodizzy") return p->mNoDizzyFlag;
+        else if (flag == "noguarddamage") return p->mNoGuardDamageFlag;
+        else if (flag == "noredlife") return p->mNoRedLifeFlag;
+        else if (flag == "noguardspark") return p->mNoGuardSparkFlag;
+        else if (flag == "nohitspark") return p->mNoHitSparkFlag;
         return 0;
 }
 
