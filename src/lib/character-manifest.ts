@@ -65,7 +65,7 @@ export interface RemoteManifest {
  * Character FILES (sprites, sounds) still use jsDelivr for speed.
  */
 export const MANIFEST_URL =
-  "https://raw.githubusercontent.com/nawaf-al-hussain/FightingGameEngine-Assets/main/manifest.json";
+  "https://raw.githubusercontent.com/Nawaf-AlHussain/FightingGameEngine-Assets/main/manifest.json";
 
 // =============================================================================
 // Manifest fetching
