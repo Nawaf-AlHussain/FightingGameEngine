@@ -12,12 +12,19 @@ BUILD_DIR="$PROJECT_ROOT/build/wasm"
 OUTPUT_DIR="$PROJECT_ROOT/public/game"
 
 export EMSDK_QUIET=1
-# Source emsdk first (it sets EMSDK var), then prepend the tool paths.
-source /tmp/emsdk/emsdk_env.sh 2>&1 || true
-export PATH="/tmp/emsdk/upstream/emscripten:/tmp/emsdk/upstream/bin:/tmp/emsdk/node/22.16.0_64bit/bin:$PATH"
+# Source emsdk from persistent location (/home/z/emsdk). Falls back to /tmp/emsdk.
+if [ -f /home/z/emsdk/emsdk_env.sh ]; then
+    source /home/z/emsdk/emsdk_env.sh 2>&1 || true
+    export PATH="/home/z/emsdk/upstream/emscripten:/home/z/emsdk/upstream/bin:$(dirname $(ls /home/z/emsdk/node/*/bin/node 2>/dev/null | head -1) 2>/dev/null):$PATH"
+elif [ -f /tmp/emsdk/emsdk_env.sh ]; then
+    source /tmp/emsdk/emsdk_env.sh 2>&1 || true
+    export PATH="/tmp/emsdk/upstream/emscripten:/tmp/emsdk/upstream/bin:/tmp/emsdk/node/22.16.0_64bit/bin:$PATH"
+fi
 
 if ! command -v emcc &>/dev/null; then
-    echo "ERROR: emcc not found."
+    echo "ERROR: emcc not found. Install emsdk:"
+    echo "  git clone https://github.com/emscripten-core/emsdk.git /home/z/emsdk"
+    echo "  cd /home/z/emsdk && ./emsdk install latest && ./emsdk activate latest"
     exit 1
 fi
 

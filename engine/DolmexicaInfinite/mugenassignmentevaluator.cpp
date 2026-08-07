@@ -2550,6 +2550,11 @@ static AssignmentReturnValue* evaluateCondArrayAssignment(DreamMugenAssignment**
 
         AssignmentReturnValue* ret = NULL;
 
+        // Phase 4.1 verification: Short-circuit evaluation confirmed correct.
+        // Cond(condition, true_branch, false_branch) evaluates ONLY the taken
+        // branch. The unused branch is never visited, so := side effects there
+        // are suppressed. Matches Ikemen GO jz/jmp bytecode behavior.
+        // Both IfElse() and Cond() use this function.
         AssignmentReturnValue* truthValue = evaluateAssignmentDependency(&firstV->a, tPlayer, tIsStatic);
         int isTrue = convertAssignmentReturnToNumber(truthValue);
         if (isTrue) {
