@@ -262,6 +262,7 @@ namespace prism {
         static void unloadWrapper();
 
         static void tryToUnloadAndReturnToScreenHandling() {
+                logError("ENGINE CRASH: tryToUnloadAndReturnToScreenHandling called — recovering to error screen");
                 setNewScreen(getErrorScreen());
                 unloadWrapper();
                 jumpBackToScreenHandling();
