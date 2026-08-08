@@ -1419,6 +1419,53 @@ static void updateNoJuggleCheckFlag(DreamPlayer* tPlayer) {
         tPlayer->mNoJuggleCheckFlag = 0;
 }
 
+// Phase 3.2 — Reset all extended AssertSpecial flags every frame.
+// These flags are "one-frame" flags: set by AssertSpecial during state
+// execution, must be cleared before the next frame. Without this reset,
+// any flag set once (e.g. noko, noinput, noairjump) would persist forever,
+// causing permanent state corruption.
+// NOTE: These flags are NOT enforced in gameplay — they're only queryable
+// via isasserted(). The reset ensures isasserted() returns the correct
+// per-frame value.
+	// Phase 3.2 — Reset all extended AssertSpecial flags every frame.
+	// These are one-frame flags: set by AssertSpecial during state
+	// execution, must be cleared before the next frame.
+	static void updateExtendedAssertFlags(DreamPlayer* tPlayer) {
+	tPlayer->mNoAILevelFlag = 0;
+	tPlayer->mNoAirJumpFlag = 0;
+	tPlayer->mNoAttackBoxFlag = 0;
+	tPlayer->mNoBrakeFlag = 0;
+	tPlayer->mNoClipFlag = 0;
+	tPlayer->mNoComboDisplayFlag = 0;
+	tPlayer->mNoCounterFlag = 0;
+	tPlayer->mNoCrouchMoveFlag = 0;
+	tPlayer->mNoDebugInfoFlag = 0;
+	tPlayer->mNoDizzyFlag = 0;
+	tPlayer->mNoFaceFlag = 0;
+	tPlayer->mNoFallDefenseUpFlag = 0;
+	tPlayer->mNoFatigueFlag = 0;
+	tPlayer->mNoGuardBarDisplayFlag = 0;
+	tPlayer->mNoGuardBoxFlag = 0;
+	tPlayer->mNoGuardDamageFlag = 0;
+	tPlayer->mNoGuardSparkFlag = 0;
+	tPlayer->mNoHardcodedKeysFlag = 0;
+	tPlayer->mNoHitBoxFlag = 0;
+	tPlayer->mNoHitDamageFlag = 0;
+	tPlayer->mNoHitSparkFlag = 0;
+	tPlayer->mNoJumpFlag = 0;
+	tPlayer->mNoKOFlag = 0;
+	tPlayer->mNoLifebarActionFlag = 0;
+	tPlayer->mNoMP3Flag = 0;
+	tPlayer->mNoMPCostFlag = 0;
+	tPlayer->mNoPauseRestoreFlag = 0;
+	tPlayer->mNoPowerBarDisplayFlag = 0;
+	tPlayer->mNoProjFlag = 0;
+	tPlayer->mNoRedLifeFlag = 0;
+	tPlayer->mNoStandMoveFlag = 0;
+	tPlayer->mNoStateDisplayFlag = 0;
+	tPlayer->mNoTurnFlag = 0;
+	}
+
 static void updatePlayerDrawOffset(DreamPlayer* tPlayer) {
         tPlayer->mDrawOffset.x = 0;
         tPlayer->mDrawOffset.y = 0;
@@ -1455,6 +1502,7 @@ static int updateSinglePlayerPreStateMachine(DreamPlayer* p) {
                 updateWidthFlag(p);
                 updateInvisibilityFlag(p);
                 updateNoJuggleCheckFlag(p);
+                updateExtendedAssertFlags(p);
                 updatePlayerDrawOffset(p);
 
                 updateWalking(p);
