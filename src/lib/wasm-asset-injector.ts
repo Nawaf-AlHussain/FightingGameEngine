@@ -68,6 +68,20 @@ export async function injectCharacterIntoWasm(
     for (const [filename, data] of files) {
       const filePath = `${charPath}/${filename}`;
       try {
+        // Create subdirectories if the file is in a subfolder (e.g., ACT/pal1.act)
+        if (filename.includes("/")) {
+          const subdir = filename.substring(0, filename.lastIndexOf("/"));
+          const subdirPath = `${charPath}/${subdir}`;
+          const parts = subdirPath.split("/").filter(Boolean);
+          let currentPath = "";
+          for (const part of parts) {
+            currentPath += "/" + part;
+            const check = FS.analyzePath(currentPath);
+            if (!check.exists) {
+              FS.mkdir(currentPath);
+            }
+          }
+        }
         FS.writeFile(filePath, new Uint8Array(data));
         injected++;
       } catch (e) {
