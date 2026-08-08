@@ -61,13 +61,14 @@ LINK_FLAGS="$LINK_FLAGS -s USE_SDL=2 -s USE_SDL_MIXER=2 -s USE_SDL_TTF=2"
 LINK_FLAGS="$LINK_FLAGS --use-port=sdl2_image:formats=png"
 LINK_FLAGS="$LINK_FLAGS -s NO_EXIT_RUNTIME=1"
 LINK_FLAGS="$LINK_FLAGS -s CASE_INSENSITIVE_FS=1 -s FORCE_FILESYSTEM=1"
-LINK_FLAGS="$LINK_FLAGS -s TOTAL_MEMORY=805306368"          # 768 MB fixed (no growth)
+LINK_FLAGS="$LINK_FLAGS -s TOTAL_MEMORY=1610612736"          # 1536 MB (1.5 GB) fixed (no growth)
 # NOTE: Do NOT use ALLOW_MEMORY_GROWTH. When the WASM heap grows, all
 # existing C++ pointers (DreamPlayer*, hit data, animation pointers)
 # become invalid because the heap is relocated. This causes
 # "memory access out of bounds" crashes during HitDef evaluation.
 # The original Dolmexica build uses fixed 384MB with no growth.
-# We use 768MB to have headroom for 3 characters + AI without growing.
+# We use 1536MB to have headroom for large characters (Nightwing: 57024
+# assignments, 3094 controllers, 21MB SFF) without growing.
 LINK_FLAGS="$LINK_FLAGS -s EXPORTED_RUNTIME_METHODS=ccall,cwrap,setValue,getValue,FS,HEAP32,HEAP8"
 LINK_FLAGS="$LINK_FLAGS -s EXPORTED_FUNCTIONS=[_setExternalPlayerInput,_disableExternalInput,_isExternalInputActive,_startDirectMatch,_forcePlayerState,_forcePlayerControl,_setPlayerAI,_getPlayerLifeExport,_getPlayerLifeMaxExport,_getPlayerPowerExport,_isPlayerAliveExport,_getPlayerStateExport,_getPlayerRoundsWonExport,_getRoundNumberExport,_getRoundStateExport,_getSyncFingerprintExport,_setRandomSeedExport,_setPlayerSyncStateExport,_updateResyncInterpolationExport,_getPlayerPositionXExport,_getPlayerPositionYExport,_getPlayerVelocityXExport,_getPlayerVelocityYExport,_getPlayerFacingExport,_malloc,_free,_main]"
 
