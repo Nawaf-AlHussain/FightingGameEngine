@@ -6,12 +6,12 @@
 
 Not "exactly like Ikemen GO" — but "characters work correctly without crashes, glitches, or missing features." The engine should handle SFF v1/v2, Cond/IfElse, enemy/partner redirections, and standard MUGEN 1.1 state controllers.
 
-### Current State (as of Aug 8, 2026)
+### Current State (as of Aug 10, 2026)
 
 | Metric | Value |
 |--------|-------|
-| Total characters available | **14** (2 bundled + 12 downloadable) |
-| Total stages available | **2** (1 bundled + 2 downloadable) |
+| Total characters available | **16** (2 bundled + 14 downloadable) |
+| Total stages available | **3** (1 bundled + 3 downloadable) |
 | WASM memory | **1.5 GB** (increased from 768MB for large characters) |
 | Triggers | ~165+ (Phase 1 + partial Phase 2/3) |
 | State controllers | ~100+ (all 91 MUGEN 1.1 + RootVarSet, MapSet, ModifyHitDef, etc.) |
@@ -82,6 +82,14 @@ Not "exactly like Ikemen GO" — but "characters work correctly without crashes,
 40. ✅ **Manifest missing files filter** — `update-manifest.py` now skips files referenced in .def but not present on disk (like common1.cns for shared characters).
 41. ✅ **Crash logging** — `tryToUnloadAndReturnToScreenHandling` now logs when called, so silent crashes are visible.
 
+### Session 3 — Standard common1.cns + Assets Updates (commits 15e8a66..3d4b6d5)
+
+42. ✅ **AssertSpecial case-insensitive** — `turnStringLowercase(flag)` before comparison. Characters use "NoWalk", "Noshadow", "Unguardable" etc.
+43. ✅ **Per-frame AssertSpecial flag reset** — `updateExtendedAssertFlags()` called every frame to prevent flags from persisting forever.
+44. ✅ **Standard MUGEN 1.0 common1.cns** — Replaced Songoku's character-specific `data/common1.cns` with the standard MUGEN 1.0 version. Songoku's version had `Var(0)` checks and `state 9000` (Recovery Roll) which caused daimaoh to get stuck when knocked down. Standard version uses only `SysVar(0)` (MUGEN system variable).
+45. ✅ **Assets INSTRUCTIONS.md updated** — Complete rewrite with current URLs, workflow, and common1.cns note.
+46. ✅ **Assets script docstrings fixed** — Changed "FightingGameEngine-Assets" to "Assets" throughout.
+
 ---
 
 ## ⚠️ KNOWN ISSUES
@@ -139,6 +147,15 @@ cd /home/z/emsdk && ./emsdk install latest && ./emsdk activate latest
 | Son Gohan | v1 | ✅ Works | Uses data/common1.cns |
 | Super Goku (SSJ) | v1 | ✅ Works | Uses data/common1.cns |
 | Trunks | v1 | ✅ Works | Uses data/common1.cns |
+| Savage Hulk | v1 | ✅ Works | Has own common1.cns, 22 files |
+
+### Stages
+| Stage | Status | Notes |
+|-------|--------|-------|
+| UIU Campus Low | ✅ Bundled | Always available |
+| DU Campus | ✅ Downloadable | |
+| Masjid Al Mustafa | ✅ Downloadable | |
+| UIU Fountain | ✅ Downloadable | |
 
 ---
 
