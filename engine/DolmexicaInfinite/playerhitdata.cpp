@@ -683,7 +683,20 @@ double getActiveHitDataYAccel(DreamPlayer* tPlayer)
         if (isActiveHitDataActive(tPlayer)) {
                 assert(isGeneralPlayer(tPlayer));
                 PlayerHitData* e = &tPlayer->mActiveHitData;
-                return transformDreamCoordinates(e->mVerticalAcceleration, getActiveHitDataCoordinateP(tPlayer), getPlayerCoordinateP(tPlayer));
+                double ret = transformDreamCoordinates(e->mVerticalAcceleration, getActiveHitDataCoordinateP(tPlayer), getPlayerCoordinateP(tPlayer));
+
+                // Safety net: if the hit's yaccel is 0 (not set or lost during
+                // hit data lifecycle), fall back to the player's own movement
+                // yaccel. In MUGEN, gethitvar(yaccel) is never 0 — it always
+                // returns either the HitDef's yaccel or a default. A 0 value
+                // causes characters to float forever in state 5050 (air fall)
+                // because VelAdd y = GetHitVar(yaccel) adds 0 gravity.
+                if (ret == 0.0) {
+                        double playerYAccel = tPlayer->mHeader->mFiles.mConstants.mMovementData.mVerticalAcceleration;
+                        return transformDreamCoordinates(playerYAccel, getPlayerCoordinateP(tPlayer), getPlayerCoordinateP(tPlayer));
+                }
+
+                return ret;
         }
         else {
                 return transformDreamCoordinates(0.7, 640, getPlayerCoordinateP(tPlayer));
