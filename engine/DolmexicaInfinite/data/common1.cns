@@ -32,39 +32,23 @@
 type = S
 physics = S
 sprpriority = 0
-anim = 0
 
-[State 0, IntroStuff]
-type = RemoveExplod
-trigger1 = time >= 0
-id = 700
-
-[State 0, ChangeAnim]
+[State 0, 1]
 type = ChangeAnim
 trigger1 = Anim != 0 && Anim != 5
 trigger2 = Anim = 5 && AnimTime = 0 ;Turn anim over
 value = 0
-;persistent = 0
 
 [State 0, 2]
 type = VelSet
 trigger1 = Time = 0
 y = 0
 
-;[State 0, 3] ;Stop moving if low velocity or 4 ticks pass
-;type = VelSet
-;trigger1 = abs(vel x) < Const(movement.stand.friction.threshold)
-;trigger2 = Time = 4
-;x = 0
-
-[State 0, NothingnessForIntro]
-type = PlaySnd
-trigger1 = RoundState = 2
-trigger1 = time = 0
-value = S43,0
-channel = 1
-ignorehitpause = 1
-persistent = 0
+[State 0, 3] ;Stop moving if low velocity or 4 ticks pass
+type = VelSet
+trigger1 = abs(vel x) < Const(movement.stand.friction.threshold)
+trigger2 = Time = 4
+x = 0
 
 [State 0, 4] ;Are you dead?
 type = ChangeState
@@ -107,32 +91,6 @@ type = ChangeAnim
 trigger1 = Anim = 6 && AnimTime = 0
 value = 11
 
-[State 11, EvilRyuGlowEyes]
-type = Explod
-trigger1 = (GameTime % 4) = 0
-trigger1 = PalNo = 6
-anim = 2702 ; + random%3
-;ID =
-pos = 9,29
-postype = p1  ;p2,front,back,left,right
-facing = 1
-vfacing = 1
-bindtime = 1
-vel = 0,0
-accel = 0,0
-random = 4,2
-removetime = 7
-;supermove
-;pausemove
-scale = 1,1
-sprpriority = 1
-ontop = 0
-shadow = 0,0,0
-ownpal = 1
-removeongethit = 0
-ignorehitpause = 1
-;persistent =
-
 [State 11, 2] ;Stop moving if low velocity
 type = VelSet
 trigger1 = abs(vel x) < Const(movement.crouch.friction.threshold)
@@ -151,33 +109,6 @@ trigger1 = AnimTime = 0
 value = 0
 
 ;---------------------------------------------------------------------------
-;Crouching for AI
-[Statedef 13]
-type    = C
-physics = C
-anim = 11
-sprpriority = 0
-
-[State 13, Guard]
-type = ChangeState
-triggerall = p2movetype = A
-trigger1 = random < 30
-value = 131
-ctrl = 0
-anim = 11
-;ignorehitpause =
-;persistent =
-
-[State 13, ChangeState]
-type = ChangeState
-trigger1 = (GameTime % 10) = random%27
-value = 11
-ctrl = 1
-anim = 11
-;ignorehitpause =
-;persistent =
-
-;---------------------------------------------------------------------------
 ; Walk
 [Statedef 20]
 type    = S
@@ -187,12 +118,12 @@ sprpriority = 0
 [State 20, 1]
 type = VelSet
 trigger1 = command = "holdfwd"
-x = 2.6;const(velocity.walk.fwd.x)
+x = const(velocity.walk.fwd.x)
 
 [State 20, 2]
 type = VelSet
 trigger1 = command = "holdback"
-x = -2.3;const(velocity.walk.back.x)
+x = const(velocity.walk.back.x)
 
 [State 20, 3]
 type = ChangeAnim
@@ -207,39 +138,6 @@ triggerall = vel x < 0
 trigger1 = Anim != 21 && Anim != 5
 trigger2 = Anim = 5 && AnimTime = 0
 value = 21
-
-;---------------------------------------------
-; Walk Backward (For the AI)
-[Statedef 21]
-type    = S
-physics = S
-sprpriority = 0
-anim = 21
-Ctrl = 0
-
-[State 21, VelSet]
-type = VelSet
-trigger1 = time >=0
-x = -1.6;const(velocity.walk.back.x)
-
-[State 21, Guard]
-type = ChangeState
-triggerall = p2movetype = A
-trigger1 = random < 30
-value = 130
-ctrl = 1
-anim = 11
-;ignorehitpause =
-;persistent =
-
-[State 21, ChangeState]
-type = ChangeState
-trigger1 = (GameTime % 20) = random%27
-value = 0
-ctrl = 1
-anim = 0
-;ignorehitpause =
-;persistent =
 
 ;---------------------------------------------------------------------------
 ; Jump Start
@@ -286,7 +184,7 @@ value = 50
 ctrl = 1
 
 ;---------------------------------------------------------------------------
-;AirJump Start
+; AirJump Start
 [Statedef 45]
 type    = A
 physics = N
@@ -331,7 +229,7 @@ value = 50
 ctrl = 1
 
 ;---------------------------------------------------------------------------
-;Jump Up
+; Jump Up
 [Statedef 50]
 type    = A
 physics = A
@@ -346,12 +244,6 @@ type = ChangeAnim
 trigger1 = Time = 0
 value = ifelse((vel x)=0, 41, ifelse((vel x)>0, 42, 43))
 
-[State 50, Chatter]
-type = PlaySnd
-trigger1 = PalNo = 6
-trigger1 = time = 0
-value = S825,random%99  ;Low Chatter
-
 [State 50, 3]
 type = ChangeAnim
 trigger1 = Vel y > Const720p(-8)
@@ -361,7 +253,7 @@ persistent = 0
 value = Anim + 3
 
 ;---------------------------------------------------------------------------
-;Jump Down (empty state for compatibility)
+; Jump Down (empty state for compatibility)
 [Statedef 51]
 type    = A
 physics = A
@@ -370,19 +262,8 @@ physics = A
 type = Null
 trigger1 = 1
 
-[State 51, CtrlSet]
-type = CtrlSet
-triggerall = time >=20
-trigger1 = PrevStateNo = [1401,1403]
-trigger2 = PrevStateNo = 3605
-trigger2 = PrevStateNo = 3701
-value = 1
-;ignorehitpause =
-;persistent =
-
-
 ;---------------------------------------------------------------------------
-;Jump Land
+; Jump Land
 [Statedef 52]
 type    = S
 physics = S
@@ -416,7 +297,7 @@ value = 0
 ctrl = 1
 
 ;---------------------------------------------------------------------------
-;Run forward
+; Run forward
 [Statedef 100]
 type    = S
 physics = S
@@ -426,7 +307,7 @@ sprpriority = 1
 [State 100, 1]
 type = VelSet
 trigger1 = 1
-x = 7
+x = const(velocity.run.fwd.x)
 
 [State 100, 2] ;Prevent run from canceling into walk
 type = AssertSpecial
@@ -438,149 +319,10 @@ type = AssertSpecial
 trigger1 = 1
 flag = NoAutoTurn
 
-[State 100, DashTrail]
-type = Explod
-trigger1 = time = 10
-anim = 6050
-;ID = 101
-pos = 0,0
-random = 3,2
-postype = p1  ;p2,front,back,left,right
-facing = 1
-vfacing = 1
-bindtime = 1
-vel = 0,0
-removetime = 15
-scale = 1,1
-sprpriority = 3
-ontop = 1
-ownpal = 1
-removeongethit = 1
-
-[State 100, DashTrail]
-type = Explod
-trigger1 = time = 11
-anim = 6050
-;ID = 102
-pos = 0,-25
-random = 3,2
-postype = p1  ;p2,front,back,left,right
-facing = 1
-vfacing = 1
-bindtime = 1
-vel = 0,0
-removetime = 15
-scale = 1,1
-sprpriority = 3
-ontop = 1
-ownpal = 1
-removeongethit = 1
-
-[State 100, DashTrail]
-type = Explod
-trigger1 = time = 10
-anim = 6050
-;ID = 103
-pos = 0,-45
-random = 3,2
-postype = p1  ;p2,front,back,left,right
-facing = 1
-vfacing = 1
-bindtime = 1
-vel = 0,0
-removetime = 15
-scale = 1,1
-sprpriority = 3
-ontop = 1
-ownpal = 1
-removeongethit = 1
-
-[State 100, DashTrail]
-type = Explod
-trigger1 = time = 15
-anim = 6050
-;ID = 104
-pos = 20,-65
-random = 3,2
-postype = p1  ;p2,front,back,left,right
-facing = 1
-vfacing = 1
-bindtime = 1
-vel = 0,0
-removetime = 15
-scale = 1,1
-sprpriority = 3
-ontop = 1
-ownpal = 1
-removeongethit = 1
-
-[State 100, dust]
-type = Explod
-trigger1 = time = 3
-trigger2 = time = 5
-anim = 6059
-;ID = 6059
-pos = 0,5
-postype = p1  ;p2,front,back,left,right
-facing = 1
-vfacing = 1
-bindtime = 1
-vel = -.4,.3
-accel = -.1,-.2
-removetime = 20
-scale = 1,1
-sprpriority = 0
-ontop = 0
-shadow = 0,0,0
-ownpal = 0
-removeongethit = 0
-;ignorehitpause =
-;persistent =
-
-[State 100, dust]
-type = Explod
-trigger1 = time = 8
-anim = 6059
-;ID = 6059
-pos = 0,5
-postype = p1  ;p2,front,back,left,right
-facing = 1
-vfacing = 1
-bindtime = 1
-vel = .4,.3
-accel = .1,-.2
-removetime = 20
-scale = 1,1
-sprpriority = 0
-ontop = 0
-shadow = 0,0,0
-ownpal = 0
-removeongethit = 0
-;ignorehitpause =
-;persistent =
-
-[State 100, woosh]
-type = PlaySnd
-trigger1 = time = 0
-value = S0,12
-
-[State 100, grunt]
-type = PlaySnd
-trigger1 = time = 3
-value = S23,5
-
-;[State 100, RemoveExplod]
-;type = RemoveExplod
-;trigger1 = time = 12
-;id = 101 || 102 || 103 || 104
-
-[State 100, ChangeState]
+[State 100, 4]
 type = ChangeState
-trigger1 = p2bodydist x < 40;command != "holdfwd"
-trigger2 = command != "holdfwd"
-trigger3 = time >= 70
-value = 52
-ctrl = 0
+trigger1 = command != "holdfwd"
+value = 0
 
 ;---------------------------------------------------------------------------
 ; Hop backwards
@@ -599,13 +341,8 @@ y = const(velocity.run.back.y)
 
 [State 105, 2]
 type = CtrlSet
-trigger1 = Time >= 5
+trigger1 = Time = 2
 value = 1
-
-[State 100, woosh]
-type = PlaySnd
-trigger1 = time = 0
-value = S0,7
 
 [State 105, 3]
 type = ChangeState
@@ -631,22 +368,18 @@ type = PosSet
 trigger1 = Time = 0
 y = 0
 
-[State 106, VelSet]
+[State 106, 3]
+type = MakeDust
+trigger1 = Time = 2
+pos = 0, 0
+spacing = 1
+
+[State 106, 4]
 type = VelSet
 trigger1 = abs(vel x) < Const(movement.stand.friction.threshold)
 x = 0
 
-[State 106, CtrlSet]
-type = CtrlSet
-trigger1 = Time >= 2
-value = 1
-
-[State 100, Land]
-type = PlaySnd
-trigger1 = time = 0
-value = S40,random%3
-
-[State 106, ChangeState]
+[State 106, 5]
 type = ChangeState
 trigger1 = Time = 7
 value = 0
@@ -1077,7 +810,7 @@ ctrl = 0
 anim = 170
 velset = 0,0
 
-[State 170, NotHitBy]
+[State 170, 1]
 type = NotHitBy
 trigger1 = 1
 value = SCA
@@ -1089,13 +822,51 @@ time = 1
 type = S
 ctrl = 0
 velset = 0,0
-anim = 170
 
-[State 175, NotHitBy]
+[State 175, 1] ; If no anim, use go to lose state.
+type = ChangeState
+trigger1 = Time = 0
+trigger1 = !SelfAnimExist(175)
+value = 170
+
+[State 175, 2]
+type = ChangeAnim
+trigger1 = Time = 0
+value = 175
+
+[State 175, 3]
 type = NotHitBy
 trigger1 = 1
 value = SCA
 time = 1
+
+;---------------------------------------------------------------------------
+; Pre-intro
+[Statedef 190]
+type = S
+ctrl = 0
+velset = 0,0
+
+[State 190, 1]
+type = ChangeAnim
+trigger1 = SelfAnimExist(190)
+value = 190
+
+[State 190, 2] ;Go straight to intro.
+type = ChangeState
+trigger1 = Time = 0
+value = 191
+
+;---------------------------------------------------------------------------
+; Intro (override this state to give character an intro)
+[Statedef 191]
+type = S
+ctrl = 0
+
+[State 191, 1]
+type = ChangeState
+trigger1 = Time = 0
+value = 0
 
 ;---------------------------------------------------------------------------
 ; Stand get-hit (shaking)
@@ -1104,7 +875,6 @@ type    = S
 movetype= H
 physics = N
 velset = 0,0
-ctrl = 0
 
 [State 5000, 1] ;Anim for HIT_LIGHT to HIT_HARD
 type = ChangeAnim
@@ -1163,12 +933,6 @@ time = 15
 waveform = sinesquare
 ampl = 140
 
-;[State 5000, HitGrunt]
-;type = PlaySnd
-;trigger1 = PalNo = 6
-;trigger1 = time = 0
-;value = S832,random%90
-
 [State 5000, 6]
 type = ChangeState
 trigger1 = HitShakeOver
@@ -1186,7 +950,6 @@ value = 5030
 type    = S
 movetype= H
 physics = S
-ctrl = 0
 
 [State 5001, 1]
 type = HitVelSet
@@ -1213,12 +976,6 @@ type = DefenceMulSet
 trigger1 = HitOver
 value = 1
 
-;[State 5001, HitGrunt]
-;type = PlaySnd
-;trigger1 = PalNo = 6
-;trigger1 = time = 0
-;value = S832,random%90
-
 [State 5001, 6]
 type = ChangeState
 trigger1 = HitOver
@@ -1232,7 +989,6 @@ type    = C
 movetype= H
 physics = N
 velset = 0,0
-ctrl = 0
 
 [State 5010, 1] ;Anim for HIT_LIGHT to HIT_HARD
 type = ChangeAnim
@@ -1263,12 +1019,6 @@ triggerall = Time = 0
 trigger1 = GetHitVar(yvel) != 0 || GetHitVar(fall)
 trigger2 = Pos Y != 0
 statetype = a
-
-;[State 5010, HitGrunt]
-;type = PlaySnd
-;trigger1 = PalNo = 6
-;trigger1 = time = 0
-;value = S832,random%90
 
 [State 5010, 6]
 type = ChangeState
@@ -1310,7 +1060,6 @@ ampl = 140
 type    = C
 movetype= H
 physics = C
-ctrl = 0
 
 [State 5011, 1]
 type = HitVelSet
@@ -1337,12 +1086,6 @@ type = DefenceMulSet
 trigger1 = HitOver
 value = 1
 
-;[State 5011, HitGrunt]
-;type = PlaySnd
-;trigger1 = PalNo = 6
-;trigger1 = time = 0
-;value = S832,random%90
-
 [State 5011, 6]
 type = ChangeState
 trigger1 = HitOver
@@ -1356,7 +1099,6 @@ type    = A
 movetype= H
 physics = N
 velset = 0,0
-ctrl = 0
 
 [State 5020, 1] ;Anim for HIT_LIGHT to HIT_HARD
 type = ChangeAnim
@@ -1439,12 +1181,6 @@ trigger1 = Time = 0
 x = 1
 y = 1
 
-;[State 5000, HitGrunt]
-;type = PlaySnd
-;trigger1 = PalNo = 6
-;trigger1 = time = 0
-;value = S832,random%90
-
 [State 5030, 4]
 type = ChangeState
 triggerall = !HitFall
@@ -1472,7 +1208,6 @@ value = 5035 ;Air get-hit (transition)
 type    = A
 movetype= H
 physics = N
-ctrl = 0
 
 [State 5035, 1]
 type = ChangeAnim
@@ -1515,7 +1250,6 @@ value = 5050 ;Air get-hit (falling)
 type    = A
 movetype= H
 physics = N
-ctrl = 0
 
 [State 5040, 1]
 type = ChangeState
@@ -1546,12 +1280,6 @@ type = VelAdd
 trigger1 = 1
 y = GetHitVar(yaccel)
 
-;[State 5040, EvilTaunt]
-;type = PlaySnd
-;trigger1 = PalNo = 6
-;trigger1 = time = 0
-;value = S833,0
-
 [State 5040, 6]
 type = ChangeState
 trigger1 = Vel Y > 0
@@ -1564,7 +1292,6 @@ value = 52 ;Jump land
 type    = A
 movetype= H
 physics = N
-ctrl = 0
 
 [State 5050, 1] ;Change anim when done with transition
 type = ChangeAnim
@@ -1588,11 +1315,6 @@ persistent = 0
 type = VelAdd
 trigger1 = 1
 y = GetHitVar(yaccel)
-
-;[State 5050, HitGrunt]
-;type = PlaySnd
-;trigger1 = time = 0
-;value = S920,random%7
 
 [State 5050, 4] ;Recover near ground
 type = ChangeState
@@ -1624,7 +1346,6 @@ type    = A
 movetype= H
 physics = N
 velset = 0,0
-ctrl = 0
 
 [State 5070, 1]
 type = ChangeAnim
@@ -1649,12 +1370,6 @@ ampl = 140
 type    = A
 movetype= H
 physics = N
-ctrl = 0
-
-;[State 5071, HitGrunt]
-;type = PlaySnd
-;trigger1 = time = 0
-;value = S920,random%7
 
 [State 5071, 1]
 type = HitVelSet
@@ -1680,7 +1395,6 @@ type    = L
 movetype= H
 physics = N
 velset = 0,0
-ctrl = 0
 
 [State 5080, 1] ;Set default anim
 type = VarSet
@@ -1724,12 +1438,6 @@ value = 5030 ;Air get-hit (knocked away)
 type    = L
 movetype= H
 physics = C
-ctrl = 0
-
-;[State 5081, HitGrunt]
-;type = PlaySnd
-;trigger1 = time = 0
-;value = S920,random%7
 
 [State 5081, 1]
 type = HitVelSet
@@ -1757,7 +1465,6 @@ value = 5110 ;Downed get-hit (lying down)
 type    = L
 movetype= H
 physics = N
-ctrl = 0
 
 [State 5100, 2004.04.14 behavior]
 type = null;VelSet
@@ -1804,11 +1511,6 @@ type = VelMul
 trigger1 = Time = 0
 x = 0.75
 
-;[State 5100, HitGrunt]
-;type = PlaySnd
-;trigger1 = time = 0
-;value = S920,random%7
-
 [State 5100, 7]
 type = ChangeState
 trigger1 = Time = 0
@@ -1837,8 +1539,8 @@ trigger1 = 1
 
 [State 5100, 12]
 type = ChangeState
-trigger1 = (Var(0) = 0) && (AnimTime = 0)
-value = 5101
+trigger1 = AnimTime = 0
+value = 5101 ;Downed get-hit (bounce off ground)
 
 [State 5100, 13]
 type = ForceFeedback
@@ -1847,18 +1549,12 @@ waveform = sinesquare
 ampl = 128,-3,-.2,.005
 time = 20
 
-[State 5100, 14]
-type = ChangeState
-trigger1 = (Var(0) = 1) && (AnimTime = 0)
-value = 9000 ;Recovery Roll
-
 ;---------------------------------------------------------------------------
 ; Downed get-hit (bounce off ground)
 [Statedef 5101]
 type    = L
 movetype= H
 physics = N
-ctrl = 0
 
 [State 5101, 1] ;Coming hit ground anim (normal)
 type = ChangeAnim
@@ -1905,7 +1601,6 @@ value = 5110
 type    = L
 movetype= H
 physics = N
-ctrl = 0
 
 [State 5110, EnvShake]
 type = FallEnvShake
@@ -2032,7 +1727,6 @@ waveform = sine
 type    = L
 movetype= I
 physics = N
-ctrl = 0
 
 [State 5120, 1a] ;Get up anim (normal)
 type = ChangeAnim
@@ -2076,22 +1770,11 @@ trigger1 = AnimTime = 0
 value2 = SCA
 time = 3
 
-;[State 5120, 7]
-;type = ChangeState
-;trigger1 = AnimTime = 0
-;value = 0
-;ctrl = 1
-
 [State 5120, 7]
 type = ChangeState
-trigger1 = (Var(0) = 0) && (AnimTime = 0)
+trigger1 = AnimTime = 0
 value = 0
 ctrl = 1
-
-[State 5120, 8]
-type = ChangeState
-trigger1 = (Var(0) = 1) && (AnimTime = 0)
-value = 9000 ;Recovery Roll
 
 ;---------------------------------------------------------------------------
 ; Downed get-hit (lying defeated)
@@ -2335,24 +2018,14 @@ ctrl = 1
 [Statedef 5500]
 type = S
 ctrl = 0
-anim = 6470+var(6)
+anim = 5300
 velset = 0,0
-
-[State 5500, AssertSpecial]
-type = AssertSpecial
-trigger1 = 1
-flag = noshadow
-
-[State 5500]
-type = VarSet
-trigger1 = Time = 0
-var(6) = random%2
 
 [State 5500, 1] ;Use continue animation if available
 type = ChangeAnim
 trigger1 = time = 0
-trigger1 = SelfAnimExist(6470)
-value = 6470+var(6)
+trigger1 = SelfAnimExist(5500)
+value = 5500
 
 ;---------------------------------------------------------------------------
 ; Initialize (at the start of the round)
