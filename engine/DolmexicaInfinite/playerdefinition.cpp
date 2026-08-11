@@ -142,13 +142,30 @@ static int getPlayerRandomPaletteIndex(MugenDefScript* tScript) {
         else return possibleValues[randfromInteger(0, int(possibleValues.size()) - 1)];
 }
 
+// Returns the first palette number listed in the character's [info] pal.defaults
+// key (e.g. "1,3,5" -> 1). Falls back to 1 if pal.defaults is absent or empty.
+// This is the "default palette" -- the one MUGEN highlights on the character
+// select screen when the player doesn't pick a specific color.
+static int getPlayerDefaultPaletteIndex(MugenDefScript* tScript) {
+        char palDefaults[100];
+        getMugenDefStringOrDefault(palDefaults, tScript, "info", "pal.defaults", "1");
+        int first = atoi(palDefaults);
+        if (first < 0) first = 1;
+        return first;
+}
+
 static int parsePlayerPreferredPalette(int tPalette, MugenDefScript* tScript) {
-        if (tPalette == -1) {
-                return getPlayerRandomPaletteIndex(tScript);
-        }
-        else {
-                return tPalette;
-        }
+        // TEMPORARY: Force both P1 and P2 to use the character's default palette
+        // (first value from pal.defaults, or 1 if not specified). This ignores
+        // any palette number set by setPlayerPreferredPalette() or the character
+        // select screen, so both players always get the same default color.
+        //
+        // To re-enable per-player palette selection in the future, revert this
+        // function to:
+        //   if (tPalette == -1) return getPlayerRandomPaletteIndex(tScript);
+        //   else return tPalette;
+        (void)tPalette;
+        return getPlayerDefaultPaletteIndex(tScript);
 }
 
 static void loadPlayerFiles(char* tPath, DreamPlayer* tPlayer, MugenDefScript* tScript) {
