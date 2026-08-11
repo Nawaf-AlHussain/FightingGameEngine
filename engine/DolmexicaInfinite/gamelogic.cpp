@@ -9,6 +9,7 @@
 #include <prism/log.h>
 #include <prism/math.h>
 #include <prism/timer.h>
+#include <prism/soundeffect.h>
 
 #include "playerdefinition.h"
 #include "fightui.h"
@@ -463,6 +464,12 @@ static void updateWinCondition() {
 
 static void resetRoundData(void* /*tCaller*/) {
         enableDrawing();
+        // Stop all sound effects when transitioning between rounds.
+        // Without this, looping sounds started during the previous round's
+        // win pose (e.g. SSJ Goku's charging sound in state 180) keep
+        // playing through the entire next round. stopKOAndWinAnimation()
+        // only stops the UI text animations, not character PlaySnd sounds.
+        stopAllSoundEffects();
         resetPlayers();
         resetDreamMugenStageHandlerCameraPosition();
         resetStageForRound();

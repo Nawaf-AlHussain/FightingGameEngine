@@ -1,6 +1,6 @@
 {
-  "version": "dev-1786425928",
-  "buildTime": 1786425928,
-  "wasmSha256": "eab604a75bf9d8aeb9e84bf585e14887fa7aa3b9af41dbc88ba563527c2e3ddb",
-  "wasmSize": 4544133
+  "version": "dev-1786431875",
+  "buildTime": 1786431875,
+  "wasmSha256": "88b16278ac2455b81a907b255d48b57d92076aa1029a2401b3ade24a2b2e680b",
+  "wasmSize": 4544102
 }
