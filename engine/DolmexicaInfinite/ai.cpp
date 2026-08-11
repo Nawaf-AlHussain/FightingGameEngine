@@ -214,25 +214,14 @@ static void setRandomAIActivationCommand(PlayerAI* e) {
 //   Full character AI + fast engine AI.
 static double getAIActivationCommandProbability(PlayerAI* e) {
 	const int aiLevel = getPlayerAILevel(e->mPlayer);
-	// Easy (levels 1-2): 0% — character custom AI NEVER activates.
-	//   Only engine AI (random real commands + movement + 5-15% guard).
+	// Character CNS AI activation probability. The character's custom AI
+	// (e.g. Songoku's var(51) AI) has 50%-per-frame guard logic that makes
+	// it nearly impossible to land hits. We only activate it on Hard.
 	//
-	// Normal (levels 3-5): 0% — character custom AI also NEVER activates.
-	//   The character CNS AI guard logic (e.g. Songoku's "Random <= 500"
-	//   = 50% per frame) makes it impossible to land hits. Even on Normal,
-	//   50%-per-frame blocking means the AI guards ~99.9% of attacks over
-	//   a 10-frame attack animation. This is NOT fun.
-	//   Instead, Normal uses the engine AI with higher action rate and
-	//   moderate guard chance (~30-40%). The AI does random moves and
-	//   occasional specials but doesn't have perfect blocking.
-	//
-	// Hard (levels 6-8): 50-65% — character custom AI activates quickly.
-	//   Full character AI + fast engine AI. This is the "real" challenge.
+	// Easy (levels 1-2): 0% — never. Pure engine AI.
+	// Normal (levels 3-5): 0% — never. Engine AI with moderate tuning.
+	// Hard (levels 6-8): 50-65% — activates quickly. Full character AI.
 	if (aiLevel <= 5) return 0.0;
-	// Levels 6-8: interpolate from 0.50 to 0.65
-	// Level 6 (factor=0.714): 0.50
-	// Level 7 (factor=0.857): 0.58
-	// Level 8 (factor=1.0): 0.65
 	return 0.50 + (0.65 - 0.50) * e->mDifficultyFactor;
 }
 
@@ -286,29 +275,27 @@ static void updateAIGuarding(PlayerAI* e) {
 		if (!e->mIsGuardingLogicActive) {
 			double rand = randfrom(0, 1);
 			// Guard chance is decided ONCE per attack encounter (not per frame).
-			// This is the engine AI guard — the character CNS AI has its own
-			// guard logic that runs separately (and is much more aggressive).
 			//
-			// Easy (levels 1-2): 5-10% — AI rarely blocks
-			// Normal (levels 3-5): 15-35% — AI blocks sometimes, human can land hits
-			// Hard (levels 6-8): 40-70% — AI blocks often (but character CNS AI
-			//   also activates on Hard, so total blocking is even higher)
+			// Easy (levels 1-2): 10-25% — AI blocks sometimes, human can land hits
+			// Normal (levels 3-5): 30-50% — AI blocks a moderate amount, varied
+			// Hard (levels 6-8): 55-75% — AI blocks often (character CNS AI also
+			//   activates on Hard with its own 50%/frame guard logic)
 			const int aiLevel = getPlayerAILevel(e->mPlayer);
 			double guardPossibilityMin, guardPossibilityMax;
 			if (aiLevel <= 2) {
-				// Easy: 5% → 10%
-				guardPossibilityMin = 0.05;
-				guardPossibilityMax = 0.10;
+				// Easy: 10% → 25%
+				guardPossibilityMin = 0.10;
+				guardPossibilityMax = 0.25;
 			}
 			else if (aiLevel <= 5) {
-				// Normal: 15% → 35%
-				guardPossibilityMin = 0.15;
-				guardPossibilityMax = 0.35;
+				// Normal: 30% → 50%
+				guardPossibilityMin = 0.30;
+				guardPossibilityMax = 0.50;
 			}
 			else {
-				// Hard: 40% → 70%
-				guardPossibilityMin = 0.40;
-				guardPossibilityMax = 0.70;
+				// Hard: 55% → 75%
+				guardPossibilityMin = 0.55;
+				guardPossibilityMax = 0.75;
 			}
 			double guardPossibility = guardPossibilityMin + (guardPossibilityMax - guardPossibilityMin) * e->mDifficultyFactor;
 			e->mWasGuardingSuccessful = (rand < guardPossibility);
@@ -370,32 +357,32 @@ static void updateAICommands(PlayerAI* e) {
 		e->mRandomInputNow = 0;
 
 		// Compute the next action delay. Lower difficulty = longer pauses.
-		// Easy (levels 1-2): 100-150 frames (~1.7-2.5 sec between actions)
-		//   — AI acts very infrequently, giving human lots of reaction time.
-		// Normal (levels 3-5): 30-50 frames (~0.5-0.8 sec)
-		//   — AI acts regularly but not overwhelmingly. Since character CNS AI
-		//     is disabled on Normal, the engine AI needs to act often enough
-		//     to provide a challenge, but not so fast that it's unbeatable.
+		// Easy (levels 1-2): 35-60 frames (~0.6-1 sec between actions)
+		//   — AI acts slowly, human has plenty of reaction time.
+		// Normal (levels 3-5): 15-30 frames (~0.25-0.5 sec)
+		//   — AI acts regularly, pressures but doesn't overwhelm.
 		// Hard (levels 6-8): 1-7 frames (~instant)
 		//   — Very fast. Character CNS AI also activates on Hard.
 		const int aiLevel = getPlayerAILevel(e->mPlayer);
 		int lowerDuration, upperDuration;
 		if (aiLevel <= 2) {
-			// Easy: much longer pauses between actions
-			// Level 1: 120-150 frames, Level 2: 100-130 frames
-			lowerDuration = 120 - (int)(40 * e->mDifficultyFactor);
-			upperDuration = 150 - (int)(30 * e->mDifficultyFactor);
+			// Easy: 35-60 frames
+			// Level 1 (factor=0): 50-70, Level 2 (factor=0.143): 35-60
+			lowerDuration = 50 - (int)(15 * e->mDifficultyFactor * 7);
+			upperDuration = 70 - (int)(10 * e->mDifficultyFactor * 7);
+			if (lowerDuration < 30) lowerDuration = 30;
+			if (upperDuration < 50) upperDuration = 50;
 		}
 		else if (aiLevel <= 5) {
-			// Normal: moderate pauses
-			// Level 3: 40-55 frames, Level 5: 30-45 frames
-			lowerDuration = 40 - (int)(10 * (e->mDifficultyFactor - 0.286) / 0.286);
-			upperDuration = 55 - (int)(10 * (e->mDifficultyFactor - 0.286) / 0.286);
-			if (lowerDuration < 25) lowerDuration = 25;
-			if (upperDuration < 35) upperDuration = 35;
+			// Normal: 15-30 frames
+			// Level 3 (factor=0.286): 30-45, Level 5 (factor=0.571): 15-25
+			lowerDuration = 30 - (int)(15 * (e->mDifficultyFactor - 0.286) / 0.286);
+			upperDuration = 45 - (int)(20 * (e->mDifficultyFactor - 0.286) / 0.286);
+			if (lowerDuration < 12) lowerDuration = 12;
+			if (upperDuration < 20) upperDuration = 20;
 		}
 		else {
-			// Hard: original fast scaling (1-7 frames at level 8)
+			// Hard: 1-7 frames at level 8
 			int lowerDurationMin = 30;
 			int lowerDurationMax = 1;
 			int upperDurationMin = 45;
