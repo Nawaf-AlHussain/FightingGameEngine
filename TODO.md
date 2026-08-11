@@ -98,6 +98,7 @@ Not "exactly like Ikemen GO" — but "characters work correctly without crashes,
 50. ✅ **getPlayerOtherPlayer NULL-fallback** — Returned `getRootPlayer(0)` unconditionally. For P1 with NULL `mOtherPlayer`, returned P1 itself (wrong). Fixed to `getRootPlayer(p->mRootID ^ 1)` to return the OTHER root player. Last remaining instance of the "hardcoded player index 0" bug family.
 51. ✅ **4 parallel audits completed** — Audio / Hit / Helper+Projectile+Explod / Trigger subsystems audited for P1/P2 asymmetry. 1 critical + 7 medium + ~25 low findings. Full report in worklog.md (Task IDs AUDIT-AUDIO, AUDIT-HIT, AUDIT-HELPER, AUDIT-TRIGGER).
 52. ✅ **Looping sounds persist into next round** — `resetRoundData()` in `gamelogic.cpp` reset players/stage/timer/UI animations between rounds but never called `stopAllSoundEffects()`. SSJ Goku's win pose charging sound (PlaySnd with loop=1) kept playing through the entire next round. `stopKOAndWinAnimation()` only stops UI text animations, not character PlaySnd sounds. Fixed by adding `stopAllSoundEffects()` at the start of `resetRoundData()`.
+53. ✅ **Force default palette for both players** — Modified `parsePlayerPreferredPalette()` in `playerdefinition.cpp` to always return the first value from the character's `[info] pal.defaults` key (or 1 if not specified), ignoring any palette number set by `setPlayerPreferredPalette()`. Both P1 and P2 now always use the same default color. Added `getPlayerDefaultPaletteIndex()` helper. Old `getPlayerRandomPaletteIndex()` kept for future re-enable. Commit `53f0e04`.
 
 ---
 

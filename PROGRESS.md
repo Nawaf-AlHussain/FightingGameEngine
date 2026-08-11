@@ -998,3 +998,106 @@ Analyzed Ikemen GO's source code. Key findings:
 | Aug 5 | Fix: asymmetric delay (local immediate, remote delayed) | Done | c33e53b |
 | Aug 5 | Research: Ikemen GO netcode analysis | Done | 3b4a4a4 |
 | Aug 5 | Docs: update TODO/PROGRESS with all findings | Done | (this commit) |
+
+---
+
+## Session: August 11, 2026 — Session 4: P1/P2 Asymmetry Bug Hunt + Sound/Palette Fixes
+
+### Summary
+Hunted for bugs similar to the P2 dash sound issue. Found and fixed 6 bugs across audio, hit, and palette subsystems. Conducted 4 parallel audits covering the entire engine for P1/P2 asymmetry issues.
+
+### Commits
+| Commit | Description |
+|--------|-------------|
+| `bf0c600` | FIX: P2 sounds not playing — Mix_AllocateChannels 16 → 128 |
+| `9fb7592` | FIX: hit sounds playing from wrong player's SND file |
+| `b7abe36` | FIX: looping sounds persist into next round (SSJ Goku charging) |
+| `53f0e04` | FEAT: force both P1 and P2 to use default palette only |
+| `bfaffbf`, `f36eadc` | docs: TODO updates |
+
+### Bugs Fixed
+
+#### 1. P2 dash sound not playing (CRITICAL)
+**File**: `addons/prism/web/sound_web.cpp`
+**Root cause**: `Mix_AllocateChannels(16)` allocated only 16 audio channels. But `parsePlayerSoundEffectChannel()` maps channels per-player using the formula `(CHANNEL_AMOUNT_PER_PLAYER * tPlayer->mRootID + tChannel) * STEREO_CHANNEL_FACTOR` with `CHANNEL_AMOUNT_PER_PLAYER=16`. So P2's channels 0-15 map to physical channels 32-62 — all out of range. `Mix_PlayChannel` silently does nothing for invalid channels.
+**Fix**: Increased `Mix_AllocateChannels` from 16 to 128. Gives P1 channels 0-31, P2 channels 32-63, auto-assign 64-127.
+
+#### 2. Hit sounds playing from wrong player's SND file (CRITICAL)
+**File**: `playerdefinition.cpp:2093` (`playPlayerHitSound`)
+**Root cause**: Function used `getPlayerSounds(p)` where `p` is the DEFENDER. But `isInPlayerFile=1` in the HitDef means "use the ATTACKER's SND file". When P1 (hitsound=S5,0) hits P2, engine looked up sound 5,0 in P2's SND file — silent if P2 doesn't have it, wrong sound if P2 has something different there. Direct parallel to bug #1 — both are "wrong player reference" issues. The spark code (`playPlayerHitSpark`) was CORRECT and passes `otherPlayer` as `tFileOwner` — the sound code was inconsistent.
+**Fix**: Added `tFileOwner` parameter to `playPlayerHitSound`, mirroring `playPlayerHitSpark`'s signature. Updated 3 call sites:
+- ReversalDef case: `tFileOwner = p` (reversal-definer owns the HitDef)
+- Guard/Hit cases: `tFileOwner = otherPlayer` (attacker owns the HitDef)
+
+#### 3. Projectile hit power lost (MEDIUM)
+**File**: `playerdefinition.cpp:1944` (`setPlayerHit`)
+**Root cause**: `addPlayerPower(tOtherPlayer, powerUp2)` didn't redirect to root. When P1's fireball hits P2, power was added to the projectile's `mPower` (which has no power bar — projectiles don't display power) instead of P1 root. The defender-side call on line 1943 correctly uses `getPlayerRoot(p)` — the attacker side was inconsistent.
+**Fix**: `addPlayerPower(getPlayerRoot(tOtherPlayer), powerUp2)`
+
+#### 4. getPlayerOtherPlayer NULL-fallback (LOW)
+**File**: `playerdefinition.cpp:4773`
+**Root cause**: NULL-fallback returned `getRootPlayer(0)` unconditionally. For P1 with NULL `mOtherPlayer` (during throw HitDef evaluation), returned P1 itself (wrong). This was the only remaining instance of the "hardcoded player index 0" bug family that caused the original P2 dash sound issue.
+**Fix**: `return getRootPlayer(p->mRootID ^ 1)` — XOR maps root 0 → root 1 and root 1 → root 0.
+
+#### 5. Looping sounds persist into next round (MEDIUM)
+**File**: `gamelogic.cpp:464` (`resetRoundData`)
+**Root cause**: `resetRoundData()` is the single entry point for round transitions. It reset players, stage, camera, timer, and UI animations (`stopKOAndWinAnimation`), but NEVER stopped sound effects. When SSJ Goku's win pose (state 180) plays a charging sound via `PlaySnd` with `loop=1`, the sound kept playing through the fadeout, round reset, and the entire next round. `stopKOAndWinAnimation()` only stops UI text overlays ("KO", "WIN", "DRAW"), not character PlaySnd sounds.
+**Fix**: Added `#include <prism/soundeffect.h>` and `stopAllSoundEffects()` call at the start of `resetRoundData()`. This calls `Mix_HaltChannel(-1)` which stops ALL sound effect channels. Music (stage BGM) is unaffected — that uses `Mix_HaltMusic()` via `stopMusic()`, a separate system.
+
+#### 6. Force default palette for both players (FEATURE)
+**File**: `playerdefinition.cpp:145-169`
+**User request**: "For now, I want the character to only show default palettes — as player 1 and player 2 both."
+**Fix**: Modified `parsePlayerPreferredPalette()` to always return the first value from the character's `[info] pal.defaults` key (or 1 if not specified), ignoring any palette number set by `setPlayerPreferredPalette()`. Added `getPlayerDefaultPaletteIndex()` helper. Old `getPlayerRandomPaletteIndex()` kept for future re-enable. To revert: restore the original 5-line if/else in `parsePlayerPreferredPalette`.
+
+### 4 Parallel Audits Conducted
+
+Launched 4 general-purpose sub-agents, each focused on a different subsystem, each instructed to find P1/P2 asymmetry bugs similar to the dash sound issue:
+
+| Audit | Subsystem | Critical | Medium | Low | Fixed |
+|-------|-----------|----------|--------|-----|-------|
+| AUDIT-AUDIO | sound system | 0 | 0 | 6 | 0 (low-severity) |
+| AUDIT-HIT | hit/collision/HitDef | 1 | 1 | 8 | 2 (crit + med) |
+| AUDIT-HELPER | helper/projectile/explod | 0 | 4 | 4 | 1 (med, same as AUDIT-HIT) |
+| AUDIT-TRIGGER | trigger system | 0 | 3 | 8 | 1 (low, getPlayerOtherPlayer) |
+| **Total** | | **1** | **8** | **26** | **4 fixes** |
+
+Full audit reports in `worklog.md` under Task IDs: AUDIT-AUDIO, AUDIT-HIT, AUDIT-HELPER, AUDIT-TRIGGER.
+
+### Deferred Findings (NOT fixed — low severity or spec ambiguity)
+
+- **p1Name/p2Name POV-relative vs absolute** — MUGEN 1.0 spec says absolute, but Ikemen implements as POV-relative. Kept POV-relative for compat.
+- **enemy(n) / enemynear(n) ignore index n** — OK for 1v1; breaks simul/2v2.
+- **playerid(n) searches only local subtree** — P1 looking up P2's helper ID → NULL.
+- **Helper/Projectile FRONT/BACK/LEFT/RIGHT postype inverted vs Explod** — Needs careful testing.
+- **Mix_ReserveChannels(64) not called** — Auto-picked sounds can land on player-reserved channels.
+- **CHANNEL_AMOUNT=64 constant disagrees with Mix_AllocateChannels(128)** — Should be hoisted to shared header.
+- **combo trigger returns 0 for projectile hits** — Combo counter incremented on projectile, not root.
+- **hitonce=0 not enforced** — HitDef always deactivates after first hit.
+- **chainID/noChainID parsed but unused** — Hit chain logic not implemented.
+- **HitOverride slot index no bounds check** — `mHitOverrides[8]`, no clamp.
+- **getPlayerTargetWithID returns LAST match, not FIRST** — Missing `break` in loop.
+
+### Key Insight
+
+The original P2 dash sound bug (channel allocation overflow) was a symptom of a broader pattern: **"hardcoded player index 0"** or **"wrong player reference"** bugs. Anytime code uses `p` or `tOtherPlayer` without checking whether it should be the attacker vs defender, or root vs helper/projectile, P2 ends up with broken behavior because P1 happens to work by accident (P1 = root index 0 = the "default" in many fallback paths). This session found and fixed 3 more instances of the same bug family.
+
+### Mistakes Made
+
+1. **Edit tool converts tabs to spaces** — when editing `playerdefinition.cpp`, the Edit tool silently converted tabs in the unrelated `updateExtendedAssertFlags` function (lines 1431-1466) to 8 spaces, creating a 70-line whitespace diff. Fixed by reverting the file and applying changes via a Python script (`/home/z/my-project/scripts/apply-fixes.py`) that does targeted string replacement without touching unrelated lines.
+
+2. **Initially fixed p1Name/p2Name to be absolute** — but Ikemen implements these as POV-relative, and most modern characters are tested against Ikemen. Reverted to avoid breaking characters designed for Ikemen's behavior.
+
+3. **unexpand converted entire file** — tried `unexpand -t 8 --first-only` to fix the tab/space issue, but it converted ALL 8-space sequences to tabs (not just the ones that were originally tabs). Made the diff 10x worse. Reverted with `git checkout` and used targeted Python replacement instead.
+
+4. **emsdk deleted again** — recurring environment issue. Had to reinstall (`git clone + ./emsdk install latest + ./emsdk activate latest`). Build script auto-detects and prints an error.
+
+### Final State
+- **53 fixes total** across 4 sessions (47 from sessions 1-3 + 6 from session 4)
+- 16 characters, 4 stages
+- WASM memory: 1.5GB
+- Both players use default palette
+- Hit sounds play from correct player's SND file
+- Looping sounds stop between rounds
+- 4 parallel audit reports documented for future reference
+- Deployed on Vercel, auto-deploys from main branch
+
