@@ -202,20 +202,26 @@ static void setRandomAIActivationCommand(PlayerAI* e) {
 // Returns the probability (0.0 - 1.0) of firing an AI-activation command
 // (vs a real command) when the AI timer fires.
 //
-// Easy (levels 1-2): 10% chance — character AI takes ~4-6 sec to activate
-// Normal (levels 3-5): 35% chance — character AI activates in ~1-2 sec
-// Hard (levels 6-8): 65% chance — character AI activates almost immediately
+// Easy (levels 1-2): 0% — character custom AI NEVER activates. Only the
+//   engine AI is active (random real commands + movement + 20-27% guard).
+//   This is genuinely easy: the AI does random moves, doesn't combo, doesn't
+//   punish, doesn't block consistently. Like fighting a button-mashing beginner.
 //
-// These numbers are calibrated so that:
-//   - On Easy, the human has time to approach and get the first hit before
-//     the character AI wakes up. The engine AI (random real commands) is
-//     still active but dumb.
-//   - On Hard, the character AI is active almost from frame 1, giving the
-//     human no breathing room.
+// Normal (levels 3-5): 35% chance — character AI activates in ~1-2 sec.
+//   Human has some breathing room but character AI eventually wakes up.
+//
+// Hard (levels 6-8): 65% chance — character AI activates almost immediately.
+//   Full character AI + fast engine AI.
 static double getAIActivationCommandProbability(PlayerAI* e) {
+	const int aiLevel = getPlayerAILevel(e->mPlayer);
+	// Easy: never fire AI-activation commands
+	if (aiLevel <= 2) return 0.0;
 	// difficultyFactor: 0.0 (level 1) to 1.0 (level 8)
-	// Linear interpolation: 0.10 → 0.65
-	return 0.10 + (0.65 - 0.10) * e->mDifficultyFactor;
+	// For levels 3-8, interpolate from 0.20 to 0.65
+	// Level 3 (factor=0.286): ~0.33
+	// Level 5 (factor=0.571): ~0.46
+	// Level 8 (factor=1.0): 0.65
+	return 0.20 + (0.65 - 0.20) * e->mDifficultyFactor;
 }
 
 // ==========================================================================
@@ -229,10 +235,18 @@ static void updateAIMovement(PlayerAI* e) {
 	const auto otherPlayerStateType = getPlayerStateType(otherPlayer);
 	const auto otherPlayerStateMoveType = getPlayerStateMoveType(otherPlayer);
 
-	if (dist > 50) {
+	// On Easy (levels 1-2), the AI is less aggressive about approaching.
+	// It only walks toward you when very far away (>100px instead of >50px),
+	// and stops at a comfortable mid-range (~60px) instead of getting in your
+	// face. This gives the human space to act.
+	const int aiLevel = getPlayerAILevel(e->mPlayer);
+	const int approachDist = (aiLevel <= 2) ? 100 : 50;
+	const int stopDist = (aiLevel <= 2) ? 60 : 30;
+
+	if (dist > approachDist) {
 		e->mIsMoving = 1;
 	}
-	else if (dist < 30) {
+	else if (dist < stopDist) {
 		e->mIsMoving = 0;
 	}
 
@@ -259,8 +273,12 @@ static void updateAIGuarding(PlayerAI* e) {
 	if (isPlayerBeingAttacked(e->mPlayer) && isPlayerInGuardDistance(e->mPlayer)) {
 		if (!e->mIsGuardingLogicActive) {
 			double rand = randfrom(0, 1);
-			double guardPossibilityMin = 0.2;
-			double guardPossibilityMax = 0.7;
+			// Easy (levels 1-2): 5-15% guard chance — AI rarely blocks
+			// Normal (level 3-5): 20-49%
+			// Hard (levels 6-8): 56-70%
+			const int aiLevel = getPlayerAILevel(e->mPlayer);
+			double guardPossibilityMin = (aiLevel <= 2) ? 0.05 : 0.20;
+			double guardPossibilityMax = 0.70;
 			double guardPossibility = guardPossibilityMin + (guardPossibilityMax - guardPossibilityMin) * e->mDifficultyFactor;
 			e->mWasGuardingSuccessful = (rand < guardPossibility);
 			e->mIsGuardingLogicActive = 1;
@@ -321,12 +339,27 @@ static void updateAICommands(PlayerAI* e) {
 		e->mRandomInputNow = 0;
 
 		// Compute the next action delay. Lower difficulty = longer pauses.
-		int lowerDurationMin = 30;
-		int lowerDurationMax = 1;
-		int upperDurationMin = 45;
-		int upperDurationMax = 7;
-		int lowerDuration = (int)(lowerDurationMin + (lowerDurationMax - lowerDurationMin) * e->mDifficultyFactor);
-		int upperDuration = (int)(upperDurationMin + (upperDurationMax - upperDurationMin) * e->mDifficultyFactor);
+		// Easy (levels 1-2): 80-120 frames (~1.3-2 sec between actions)
+		//   — AI acts very infrequently, giving human lots of reaction time.
+		// Normal (levels 3-5): 30-45 → 14-23 frames (original scaling)
+		// Hard (levels 6-8): scales down to 1-7 frames
+		const int aiLevel = getPlayerAILevel(e->mPlayer);
+		int lowerDuration, upperDuration;
+		if (aiLevel <= 2) {
+			// Easy: much longer pauses between actions
+			// Level 1: 120-150 frames, Level 2: 100-130 frames
+			lowerDuration = 120 - (int)(40 * e->mDifficultyFactor);
+			upperDuration = 150 - (int)(30 * e->mDifficultyFactor);
+		}
+		else {
+			// Normal-Hard: original scaling
+			int lowerDurationMin = 30;
+			int lowerDurationMax = 1;
+			int upperDurationMin = 45;
+			int upperDurationMax = 7;
+			lowerDuration = (int)(lowerDurationMin + (lowerDurationMax - lowerDurationMin) * e->mDifficultyFactor);
+			upperDuration = (int)(upperDurationMin + (upperDurationMax - upperDurationMin) * e->mDifficultyFactor);
+		}
 		e->mRandomInputDuration = randfromInteger(lowerDuration, upperDuration);
 	}
 }
