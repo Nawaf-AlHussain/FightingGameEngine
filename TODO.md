@@ -90,6 +90,14 @@ Not "exactly like Ikemen GO" — but "characters work correctly without crashes,
 45. ✅ **Assets INSTRUCTIONS.md updated** — Complete rewrite with current URLs, workflow, and common1.cns note.
 46. ✅ **Assets script docstrings fixed** — Changed "FightingGameEngine-Assets" to "Assets" throughout.
 
+### Session 4 — P1/P2 Asymmetry Bug Hunt (commits bf0c600, 9fb7592)
+
+47. ✅ **P2 dash sound not playing** — `Mix_AllocateChannels(16)` too small. P2's channels (mapped via `parsePlayerSoundEffectChannel` to 32-62) were out of range, so `Mix_PlayChannel` silently did nothing. Increased to 128.
+48. ✅ **Hit sounds playing from wrong player's SND** — `playPlayerHitSound(p, ...)` used `getPlayerSounds(p)` where `p` is the DEFENDER, but `isInPlayerFile=1` in the HitDef means "use the ATTACKER's SND file". When P1 (hitsound=S5,0) hits P2, engine looked up sound 5,0 in P2's SND file → silent or wrong sound. Fixed by adding `tFileOwner` parameter (mirrors `playPlayerHitSpark` signature). Direct parallel to bug #47.
+49. ✅ **Projectile hit power lost** — `addPlayerPower(tOtherPlayer, powerUp2)` didn't redirect to root. When P1's fireball hits P2, power was added to projectile's `mPower` (unused, no power bar) instead of P1 root. Fixed to `addPlayerPower(getPlayerRoot(tOtherPlayer), powerUp2)`.
+50. ✅ **getPlayerOtherPlayer NULL-fallback** — Returned `getRootPlayer(0)` unconditionally. For P1 with NULL `mOtherPlayer`, returned P1 itself (wrong). Fixed to `getRootPlayer(p->mRootID ^ 1)` to return the OTHER root player. Last remaining instance of the "hardcoded player index 0" bug family.
+51. ✅ **4 parallel audits completed** — Audio / Hit / Helper+Projectile+Explod / Trigger subsystems audited for P1/P2 asymmetry. 1 critical + 7 medium + ~25 low findings. Full report in worklog.md (Task IDs AUDIT-AUDIO, AUDIT-HIT, AUDIT-HELPER, AUDIT-TRIGGER).
+
 ---
 
 ## ⚠️ KNOWN ISSUES
@@ -114,6 +122,23 @@ cd /home/z/emsdk && ./emsdk install latest && ./emsdk activate latest
 
 ### DemoAssets Repo Access
 `FightingGameEngine/DemoAssets` — your new GitHub account (`Nawaf-AlHussain`) has read-only access. Need write permission to push manifest updates.
+
+### Deferred P1/P2 Asymmetry Findings (from Session 4 audits)
+These were found by the 4 parallel audit agents but NOT fixed (low severity or spec-interpretation questions):
+
+- **p1Name/p2Name POV-relative vs absolute** — MUGEN 1.0 spec says absolute ("Player 1's name"), but Ikemen implements as POV-relative ("the other player"). Kept POV-relative for compat with characters tested against Ikemen.
+- **enemy(n) / enemynear(n) ignore index n** — Always returns `getPlayerOtherPlayer(tPlayer)` regardless of n. OK for 1v1; breaks simul/2v2. Fix: iterate `gPlayerDefinition.mAllPlayers`.
+- **playerid(n) searches only local subtree** — P1 looking up P2's helper ID → NULL. Spec says global search.
+- **Helper/Projectile FRONT/BACK/LEFT/RIGHT postype inverted vs Explod** — `mugenstatecontrollers.cpp:4547-4559` and `:5042-5053`. Reference impl at `mugenexplod.cpp:285-298`. Needs careful testing.
+- **Mix_ReserveChannels(64) not called** — Auto-picked sounds (channel=-1) can land on player-reserved channels. One-liner fix.
+- **CHANNEL_AMOUNT=64 constant disagrees with Mix_AllocateChannels(128)** — Should be hoisted to shared header to prevent regression.
+- **combo trigger returns 0 for projectile hits** — Combo counter incremented on projectile, not root.
+- **hitonce=0 not enforced** — HitDef always deactivates after first hit.
+- **chainID/noChainID parsed but unused** — Hit chain logic not implemented.
+- **HitOverride slot index no bounds check** — `mHitOverrides[8]`, no clamp.
+- **getPlayerTargetWithID returns LAST match, not FIRST** — Missing `break` in loop.
+
+Full audit details in `worklog.md` under Task IDs: AUDIT-AUDIO, AUDIT-HIT, AUDIT-HELPER, AUDIT-TRIGGER.
 
 ---
 
