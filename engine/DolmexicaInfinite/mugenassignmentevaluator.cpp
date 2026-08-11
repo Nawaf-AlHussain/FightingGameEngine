@@ -1993,6 +1993,9 @@ static AssignmentReturnValue* getHitVarCtrltimeFunction(DreamPlayer* tPlayer) { 
 static AssignmentReturnValue* getHitVarRecoverTimeFunction(DreamPlayer* tPlayer) {      return makeNumberAssignmentReturn(getPlayerRecoverTime(tPlayer));}
 static AssignmentReturnValue* getHitVarIsBoundFunction(DreamPlayer* tPlayer) {  return makeBooleanAssignmentReturn(isPlayerBound(tPlayer));}
 static AssignmentReturnValue* getHitVarChainIDFunction(DreamPlayer* tPlayer) {  return makeNumberAssignmentReturn(getActiveHitDataChainID(tPlayer));}
+static AssignmentReturnValue* getHitVarHitIDFunction(DreamPlayer* tPlayer) {    return makeNumberAssignmentReturn(getActiveHitDataHitID(tPlayer));}
+static AssignmentReturnValue* getHitVarZOffFunction(DreamPlayer* /*tPlayer*/) { return makeNumberAssignmentReturn(0);} // zoff: deprecated, 2D engine has no Z axis
+static AssignmentReturnValue* getHitVarFallTimeFunction(DreamPlayer* tPlayer) { return makeNumberAssignmentReturn(getActiveHitDataFallRecoveryTime(tPlayer));} // fall.time: alias for fall.recovertime per MUGEN 1.0 spec
 static AssignmentReturnValue* getHitVarGuardedFunction(DreamPlayer* tPlayer) {  return makeBooleanAssignmentReturn(getLastPlayerHitGuarded(tPlayer));}
 
 // Phase 1.4 — additional gethitvar sub-keys.
@@ -2233,6 +2236,9 @@ static void setupVariableAssignments() {
         gVariableHandler.mVariables["gethitvar(yvel)"] = getHitVarYvelFunction;
         gVariableHandler.mVariables["gethitvar(yaccel)"] = getHitVarYaccelFunction;
         gVariableHandler.mVariables["gethitvar(chainid)"] = getHitVarChainIDFunction;
+        gVariableHandler.mVariables["gethitvar(hitid)"] = getHitVarHitIDFunction;
+        gVariableHandler.mVariables["gethitvar(zoff)"] = getHitVarZOffFunction;
+        gVariableHandler.mVariables["gethitvar(fall.time)"] = getHitVarFallTimeFunction;
         gVariableHandler.mVariables["gethitvar(guarded)"] = getHitVarGuardedFunction;
         gVariableHandler.mVariables["gethitvar(isbound)"] = getHitVarIsBoundFunction;
         gVariableHandler.mVariables["gethitvar(fall)"] = getHitVarFallFunction;
