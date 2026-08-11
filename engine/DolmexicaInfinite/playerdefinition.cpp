@@ -1941,7 +1941,7 @@ static void setPlayerHit(DreamPlayer* p, DreamPlayer* tOtherPlayer, void* tHitDa
                 addPlayerDamage(getPlayerRoot(p), tOtherPlayer, damage);
         }
         addPlayerPower(getPlayerRoot(p), powerUp1);
-        addPlayerPower(tOtherPlayer, powerUp2);
+        addPlayerPower(getPlayerRoot(tOtherPlayer), powerUp2);
 
         if (hitShakeDuration && isPlayerAlive(p)) {
                 setPlayerHitPaused(p, hitShakeDuration);
@@ -2090,7 +2090,7 @@ static int isIgnoredBecauseOfJuggle(DreamPlayer* p, DreamPlayer* tOtherPlayer) {
         return p->mAirJugglePoints < 0;
 }
 
-static void playPlayerHitSound(DreamPlayer* p, void(*tFunc)(DreamPlayer*,int*,Vector2DI*)) {
+static void playPlayerHitSound(DreamPlayer* p, DreamPlayer* tFileOwner, void(*tFunc)(DreamPlayer*,int*,Vector2DI*)) {
         setProfilingSectionMarkerCurrentFunction();
         int isInPlayerFile;
         Vector2DI sound;
@@ -2098,7 +2098,7 @@ static void playPlayerHitSound(DreamPlayer* p, void(*tFunc)(DreamPlayer*,int*,Ve
 
         MugenSounds* soundFile;
         if (isInPlayerFile) {
-                soundFile = getPlayerSounds(p);
+                soundFile = getPlayerSounds(tFileOwner);
         }
         else {
                 soundFile = getDreamCommonSounds();
@@ -2132,7 +2132,7 @@ static void handleReversalDefHit(DreamPlayer* p, DreamPlayer* tOtherPlayer) {
                 changePlayerStateToSelf(p, getReversalDefP1StateNo(p));
         }
 
-        playPlayerHitSound(p, getReversalDefHitSound);
+        playPlayerHitSound(p, p, getReversalDefHitSound);
         playPlayerHitSpark(p, tOtherPlayer, p, isReversalDefSparkInPlayerFile(p), getReversalDefSparkNumber(p), getActiveHitDataSparkXY(p) + getReversalDefSparkXY(p));
         addPlayerAsActiveTarget(p, tOtherPlayer);
 
@@ -2199,13 +2199,13 @@ static void playerHitEval(DreamPlayer* p, PlayerHitData& tHitDataReference) {
 
         const auto playerGuarding = isPlayerGuarding(p);
         if (playerGuarding) {
-                playPlayerHitSound(p, getActiveHitDataGuardSound);
+                playPlayerHitSound(p, otherPlayer, getActiveHitDataGuardSound);
                 playPlayerHitSpark(p, otherPlayer, otherPlayer, isActiveHitDataGuardSparkInPlayerFile(p), getActiveHitDataGuardSparkNumber(p), getActiveHitDataSparkXY(p));
         }
         else {
                 increasePlayerHitCount(otherPlayer);
                 increaseDisplayedComboCounter(getPlayerOtherPlayer(p), 1);
-                playPlayerHitSound(p, getActiveHitDataHitSound);
+                playPlayerHitSound(p, otherPlayer, getActiveHitDataHitSound);
                 playPlayerHitSpark(p, otherPlayer, otherPlayer, isActiveHitDataSparkInPlayerFile(p), getActiveHitDataSparkNumber(p), getActiveHitDataSparkXY(p));
                 setEnvironmentShake(getActiveHitDataEnvironmentShakeTime(p), getActiveHitDataEnvironmentShakeFrequency(p), getActiveHitDataEnvironmentShakeAmplitude(p), getActiveHitDataEnvironmentShakePhase(p), getPlayerCoordinateP(p));
         }
@@ -4766,9 +4766,13 @@ void turnPlayerAround(DreamPlayer* p)
 
 DreamPlayer* getPlayerOtherPlayer(DreamPlayer* p) {
         if (!p || !p->mOtherPlayer) {
-                // Return a safe fallback (root player 0) to prevent null dereference crashes
-                // This happens during throw HitDef evaluation when opponent data isn't set up yet
-                return getRootPlayer(0);
+                // Return a safe fallback to prevent null dereference crashes.
+                // This happens during throw HitDef evaluation when opponent data
+                // isn't set up yet. We return the OTHER root player (not p itself),
+                // otherwise calls like p2Name from P1 would return P1's own name.
+                // Using XOR (^ 1) maps root 0 -> root 1 and root 1 -> root 0.
+                if (!p) return getRootPlayer(0);
+                return getRootPlayer(p->mRootID ^ 1);
         }
         return p->mOtherPlayer;
 }
