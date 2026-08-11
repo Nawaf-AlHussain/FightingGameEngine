@@ -100,6 +100,10 @@ Not "exactly like Ikemen GO" — but "characters work correctly without crashes,
 52. ✅ **Looping sounds persist into next round** — `resetRoundData()` in `gamelogic.cpp` reset players/stage/timer/UI animations between rounds but never called `stopAllSoundEffects()`. SSJ Goku's win pose charging sound (PlaySnd with loop=1) kept playing through the entire next round. `stopKOAndWinAnimation()` only stops UI text animations, not character PlaySnd sounds. Fixed by adding `stopAllSoundEffects()` at the start of `resetRoundData()`.
 53. ✅ **Force default palette for both players** — Modified `parsePlayerPreferredPalette()` in `playerdefinition.cpp` to always return the first value from the character's `[info] pal.defaults` key (or 1 if not specified), ignoring any palette number set by `setPlayerPreferredPalette()`. Both P1 and P2 now always use the same default color. Added `getPlayerDefaultPaletteIndex()` helper. Old `getPlayerRandomPaletteIndex()` kept for future re-enable. Commit `53f0e04`.
 
+### Session 5 — AI Difficulty System (commit f3474e0)
+
+54. ✅ **Universal AI difficulty — Easy mode is actually easy** — Root cause: old engine AI fired ALL commands randomly, including "impossible commands" (AI1-AI31, cpu1-cpu30) that activate the character's custom AI. Once activated, the character AI fought at FULL difficulty (50% block, perfect combos) regardless of `mAILevel`. Fix: Split commands into two lists (`mAIActivationCommands` vs `mCommandNames`) and control the probability of firing AI-activation commands based on difficulty. Easy (levels 1-2): 10% chance → character AI takes ~4-6 sec to activate. Normal (levels 3-5): 35%. Hard (levels 6-8): 65%. Also disabled `ai.cheat` for easy difficulty so AI respects command timing. Research-backed: based on official MUGEN 1.1 AILevel trigger docs, Seravy's AI Guide, and MUGEN Wiki. Universal — works for any character following standard AI command naming (AI*/cpu*/computer*). New characters added later will work automatically.
+
 ---
 
 ## ⚠️ KNOWN ISSUES
