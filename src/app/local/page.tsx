@@ -372,9 +372,17 @@ function FightScreen({ p1Char, p2Char, stage, mode, difficulty, p1Difficulty, ga
   const p2AILevel = (mode === "vsAI" || isWatchMode) ? aiLevelMap[difficulty] : 0;
   const p1AILevel = isWatchMode ? aiLevelMap[p1Difficulty] : 0;
 
-  // For training mode, feed empty input to keep P2 standing still
+  // For training mode AND vsAI mode, feed empty input to P2 every frame.
+  // This does TWO things:
+  //   1. Training mode: keeps P2 standing still (empty input = no movement)
+  //   2. vsAI mode: activates P2's external input flag so that
+  //      updateInputMaskGeneral() clears the SDL keyboard bits for P2.
+  //      Without this, P2's SDL keyboard mapping (U/I/J/K/H/Y keys)
+  //      picks up P1's key presses (U/I/J/K) and causes P2 to act.
+  //      The engine AI uses mOverrideMask (OR'd in after external input
+  //      clearing), so this doesn't interfere with AI control.
   useEffect(() => {
-    if (game && mode === "training") {
+    if (game && (mode === "training" || mode === "vsAI")) {
       const interval = setInterval(() => {
         try {
           game.Module.ccall('setExternalPlayerInput', 'void', ['number', 'string'], [1, '']);
