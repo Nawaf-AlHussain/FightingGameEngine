@@ -97,6 +97,7 @@ Not "exactly like Ikemen GO" — but "characters work correctly without crashes,
 49. ✅ **Projectile hit power lost** — `addPlayerPower(tOtherPlayer, powerUp2)` didn't redirect to root. When P1's fireball hits P2, power was added to projectile's `mPower` (unused, no power bar) instead of P1 root. Fixed to `addPlayerPower(getPlayerRoot(tOtherPlayer), powerUp2)`.
 50. ✅ **getPlayerOtherPlayer NULL-fallback** — Returned `getRootPlayer(0)` unconditionally. For P1 with NULL `mOtherPlayer`, returned P1 itself (wrong). Fixed to `getRootPlayer(p->mRootID ^ 1)` to return the OTHER root player. Last remaining instance of the "hardcoded player index 0" bug family.
 51. ✅ **4 parallel audits completed** — Audio / Hit / Helper+Projectile+Explod / Trigger subsystems audited for P1/P2 asymmetry. 1 critical + 7 medium + ~25 low findings. Full report in worklog.md (Task IDs AUDIT-AUDIO, AUDIT-HIT, AUDIT-HELPER, AUDIT-TRIGGER).
+52. ✅ **Looping sounds persist into next round** — `resetRoundData()` in `gamelogic.cpp` reset players/stage/timer/UI animations between rounds but never called `stopAllSoundEffects()`. SSJ Goku's win pose charging sound (PlaySnd with loop=1) kept playing through the entire next round. `stopKOAndWinAnimation()` only stops UI text animations, not character PlaySnd sounds. Fixed by adding `stopAllSoundEffects()` at the start of `resetRoundData()`.
 
 ---
 
