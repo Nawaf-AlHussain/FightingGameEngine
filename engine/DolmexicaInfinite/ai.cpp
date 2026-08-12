@@ -102,6 +102,7 @@ typedef struct {
 	int mBurstsRemaining;       // bursts left to trigger this round
 	int mBurstTriggerFrame1;   // frame in round to trigger burst 1
 	int mBurstTriggerFrame2;   // frame in round to trigger burst 2
+	int mBurstTriggerFrame3;   // frame in round to trigger burst 3 (only at escalation 2)
 	int mRoundFrameCounter;    // frames elapsed in current round
 } PlayerAI;
 
@@ -310,7 +311,7 @@ static void updateAIGuarding(PlayerAI* e) {
 			// Guard chance is decided ONCE per attack encounter (not per frame).
 			//
 			// Easy (levels 1-2): 10-25% — AI blocks sometimes, human can land hits
-			// Normal (levels 3-5): 30-50% — AI blocks a moderate amount, varied
+			// Normal (levels 3-5): 40-60% — AI blocks a fair amount, varied
 			// Hard (levels 6-8): 55-75% — AI blocks often (character CNS AI also
 			//   activates on Hard with its own 50%/frame guard logic)
 			const int aiLevel = getPlayerAILevel(e->mPlayer);
@@ -321,9 +322,9 @@ static void updateAIGuarding(PlayerAI* e) {
 				guardPossibilityMax = 0.25;
 			}
 			else if (aiLevel <= 5) {
-				// Normal: 30% → 50%
-				guardPossibilityMin = 0.30;
-				guardPossibilityMax = 0.50;
+				// Normal: 40% → 60%
+				guardPossibilityMin = 0.40;
+				guardPossibilityMax = 0.60;
 			}
 			else {
 				// Hard: 55% → 75%
@@ -333,7 +334,7 @@ static void updateAIGuarding(PlayerAI* e) {
 			double guardPossibility = guardPossibilityMin + (guardPossibilityMax - guardPossibilityMin) * e->mDifficultyFactor;
 			// Apply escalation multiplier (Normal mode only, scales with rounds lost)
 			guardPossibility *= getEscalationGuardMultiplier(e);
-			if (guardPossibility > 0.85) guardPossibility = 0.85; // Cap at 85% so human can always land hits
+			if (guardPossibility > 0.88) guardPossibility = 0.88; // Cap at 88% so human can always land hits
 			e->mWasGuardingSuccessful = (rand < guardPossibility);
 			e->mIsGuardingLogicActive = 1;
 		}
@@ -395,8 +396,8 @@ static void updateAICommands(PlayerAI* e) {
 		// Compute the next action delay. Lower difficulty = longer pauses.
 		// Easy (levels 1-2): 35-60 frames (~0.6-1 sec between actions)
 		//   — AI acts slowly, human has plenty of reaction time.
-		// Normal (levels 3-5): 15-30 frames (~0.25-0.5 sec)
-		//   — AI acts regularly, pressures but doesn't overwhelm.
+		// Normal (levels 3-5): 8-20 frames (~0.13-0.33 sec)
+		//   — AI acts quickly, constant pressure.
 		// Hard (levels 6-8): 1-7 frames (~instant)
 		//   — Very fast. Character CNS AI also activates on Hard.
 		const int aiLevel = getPlayerAILevel(e->mPlayer);
@@ -410,12 +411,12 @@ static void updateAICommands(PlayerAI* e) {
 			if (upperDuration < 50) upperDuration = 50;
 		}
 		else if (aiLevel <= 5) {
-			// Normal: 15-30 frames
-			// Level 3 (factor=0.286): 30-45, Level 5 (factor=0.571): 15-25
-			lowerDuration = 30 - (int)(15 * (e->mDifficultyFactor - 0.286) / 0.286);
-			upperDuration = 45 - (int)(20 * (e->mDifficultyFactor - 0.286) / 0.286);
-			if (lowerDuration < 12) lowerDuration = 12;
-			if (upperDuration < 20) upperDuration = 20;
+			// Normal: 8-20 frames
+			// Level 3 (factor=0.286): 20-35, Level 5 (factor=0.571): 8-15
+			lowerDuration = 20 - (int)(12 * (e->mDifficultyFactor - 0.286) / 0.286);
+			upperDuration = 35 - (int)(20 * (e->mDifficultyFactor - 0.286) / 0.286);
+			if (lowerDuration < 6) lowerDuration = 6;
+			if (upperDuration < 12) upperDuration = 12;
 		}
 		else {
 			// Hard: 1-7 frames at level 8
@@ -453,22 +454,22 @@ static double getEscalationGuardMultiplier(PlayerAI* e) {
 	const int aiLevel = getPlayerAILevel(e->mPlayer);
 	if (aiLevel < 3 || aiLevel > 5) return 1.0; // Only Normal
 
-	if (e->mBurstActive) return 1.8; // Burst: 80% harder guard
+	if (e->mBurstActive) return 2.0; // Burst: 2x guard (very tough but beatable)
 
-	// Gradual escalation: +15% per escalation level
-	return 1.0 + 0.15 * e->mEscalationLevel;
+	// Gradual escalation: +20% per escalation level
+	return 1.0 + 0.20 * e->mEscalationLevel;
 }
 
 // Returns the escalation multiplier for action speed (1.0 = base, lower = faster).
-// During a burst, the AI acts ~5x faster.
+// During a burst, the AI acts ~6x faster.
 static double getEscalationSpeedMultiplier(PlayerAI* e) {
 	const int aiLevel = getPlayerAILevel(e->mPlayer);
 	if (aiLevel < 3 || aiLevel > 5) return 1.0; // Only Normal
 
-	if (e->mBurstActive) return 0.2; // Burst: 5x faster actions
+	if (e->mBurstActive) return 0.15; // Burst: ~6.6x faster actions
 
-	// Gradual escalation: 10% faster per level
-	return 1.0 - 0.10 * e->mEscalationLevel;
+	// Gradual escalation: 15% faster per level
+	return 1.0 - 0.15 * e->mEscalationLevel;
 }
 
 // Updates the burst and escalation state. Called every frame from updateSingleAI.
@@ -521,7 +522,7 @@ static void updateEscalationAndBursts(PlayerAI* e) {
 	if (e->mBurstsRemaining > 0 && e->mBurstTriggerFrame1 > 0 &&
 	    e->mRoundFrameCounter >= e->mBurstTriggerFrame1) {
 		e->mBurstActive = 1;
-		e->mBurstFramesRemaining = 600; // 10 seconds at 60fps
+		e->mBurstFramesRemaining = 720; // 12 seconds at 60fps
 		e->mBurstsRemaining--;
 		e->mBurstTriggerFrame1 = 0; // Mark as triggered
 		return;
@@ -531,16 +532,27 @@ static void updateEscalationAndBursts(PlayerAI* e) {
 	if (e->mBurstsRemaining > 0 && e->mBurstTriggerFrame2 > 0 &&
 	    e->mRoundFrameCounter >= e->mBurstTriggerFrame2) {
 		e->mBurstActive = 1;
-		e->mBurstFramesRemaining = 600; // 10 seconds at 60fps
+		e->mBurstFramesRemaining = 720; // 12 seconds at 60fps
 		e->mBurstsRemaining--;
 		e->mBurstTriggerFrame2 = 0; // Mark as triggered
+		return;
+	}
+
+	// Check burst 3 (only scheduled for escalation level 2 = AI lost 2 rounds)
+	if (e->mBurstsRemaining > 0 && e->mBurstTriggerFrame3 > 0 &&
+	    e->mRoundFrameCounter >= e->mBurstTriggerFrame3) {
+		e->mBurstActive = 1;
+		e->mBurstFramesRemaining = 720; // 12 seconds at 60fps
+		e->mBurstsRemaining--;
+		e->mBurstTriggerFrame3 = 0; // Mark as triggered
 		return;
 	}
 }
 
 // Called when a new round starts to schedule bursts for the upcoming round.
-// Schedules 2 bursts at random frame offsets within the first 1800 frames
-// (30 seconds) of the round. Each burst lasts 600 frames (10 seconds).
+// At escalation level 1 (AI lost 1 round): schedules 2 bursts.
+// At escalation level 2 (AI lost 2 rounds): schedules 3 bursts.
+// Each burst lasts 720 frames (12 seconds at 60fps).
 static void scheduleBurstsForRound(PlayerAI* e) {
 	const int aiLevel = getPlayerAILevel(e->mPlayer);
 
@@ -550,11 +562,11 @@ static void scheduleBurstsForRound(PlayerAI* e) {
 	e->mRoundFrameCounter = 0;
 
 	// Only Normal mode (levels 3-5) gets bursts, and only if escalated
-	// (AI lost at least 1 round). We'll check escalation at round start.
 	if (aiLevel < 3 || aiLevel > 5) {
 		e->mBurstsRemaining = 0;
 		e->mBurstTriggerFrame1 = 0;
 		e->mBurstTriggerFrame2 = 0;
+		e->mBurstTriggerFrame3 = 0;
 		return;
 	}
 
@@ -568,16 +580,26 @@ static void scheduleBurstsForRound(PlayerAI* e) {
 		e->mBurstsRemaining = 0;
 		e->mBurstTriggerFrame1 = 0;
 		e->mBurstTriggerFrame2 = 0;
+		e->mBurstTriggerFrame3 = 0;
 		return;
 	}
 
-	// Schedule 2 bursts at random times within the round.
-	// Range: 120-2400 frames (2-40 seconds into the round)
-	// Ensure the two bursts don't overlap (gap of at least 700 frames = 10s + 2s buffer)
-	e->mBurstsRemaining = 2;
-	e->mBurstTriggerFrame1 = randfromInteger(120, 900);
-	int minGap = e->mBurstTriggerFrame1 + 700;
-	e->mBurstTriggerFrame2 = randfromInteger(minGap, min(minGap + 900, 2400));
+	// Schedule bursts at random times within the round.
+	// Range: 90-600 frames (1.5-10 sec into round)
+	// Ensure bursts don't overlap (gap of at least 820 frames = 12s + 2s buffer)
+	int burstCount = (aiLostRounds >= 2) ? 3 : 2;
+	e->mBurstsRemaining = burstCount;
+
+	e->mBurstTriggerFrame1 = randfromInteger(90, 600);
+	int gap2 = e->mBurstTriggerFrame1 + 820;
+	e->mBurstTriggerFrame2 = randfromInteger(gap2, std::min(gap2 + 700, 2400));
+
+	if (burstCount >= 3) {
+		int gap3 = e->mBurstTriggerFrame2 + 820;
+		e->mBurstTriggerFrame3 = randfromInteger(gap3, std::min(gap3 + 700, 3600));
+	} else {
+		e->mBurstTriggerFrame3 = 0;
+	}
 }
 
 static void updateSingleAI(void* /*tCaller*/, PlayerAI& tData) {
@@ -594,7 +616,7 @@ static void updateSingleAI(void* /*tCaller*/, PlayerAI& tData) {
 	if (!getPlayerAILevel(e->mPlayer)) return;
 
 	// Detect round start: if frame counter is 0 and we haven't scheduled
-	// bursts yet (mBurstTriggerFrame1 == 0 AND mBurstsRemaining == 0 AND
+	// bursts yet (all trigger frames == 0 AND mBurstsRemaining == 0 AND
 	// escalation requires bursts), schedule them.
 	// This handles the round 1→2 transition where escalation kicks in.
 	if (e->mRoundFrameCounter == 0) {
@@ -604,7 +626,7 @@ static void updateSingleAI(void* /*tCaller*/, PlayerAI& tData) {
 		const int aiLevel = getPlayerAILevel(e->mPlayer);
 		if (aiLevel >= 3 && aiLevel <= 5 && aiLostRounds > 0 &&
 		    e->mBurstTriggerFrame1 == 0 && e->mBurstTriggerFrame2 == 0 &&
-		    e->mBurstsRemaining == 0) {
+		    e->mBurstTriggerFrame3 == 0 && e->mBurstsRemaining == 0) {
 			scheduleBurstsForRound(e);
 		}
 	}
@@ -664,6 +686,7 @@ void setDreamAIActive(DreamPlayer * p)
 	e.mBurstsRemaining = 0;
 	e.mBurstTriggerFrame1 = 0;
 	e.mBurstTriggerFrame2 = 0;
+	e.mBurstTriggerFrame3 = 0;
 	e.mRoundFrameCounter = 0;
 
 	DreamMugenCommands* commands = &p->mHeader->mFiles.mCommands;
