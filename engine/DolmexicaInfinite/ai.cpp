@@ -69,6 +69,12 @@ typedef struct {
 	int mIsGuardingLogicActive;
 	int mWasGuardingSuccessful;
 
+	// Reaction delay state — prevents input reading by forcing the AI
+	// to wait N frames after detecting an attack before it can guard.
+	// Based on research: pro reaction time ~230ms (14f at 60fps).
+	int mAttackDetectedNow;       // 1 if attack detected this encounter
+	int mAttackReactionTimer;     // frames remaining before AI can react
+
 	// Real move commands (hadouken, shoryuken, etc.) — fired randomly
 	// to make the AI do things even before custom AI activates.
 	vector<string> mCommandNames;
@@ -305,42 +311,90 @@ static void updateAIMovement(PlayerAI* e) {
 }
 
 static void updateAIGuarding(PlayerAI* e) {
-	if (isPlayerBeingAttacked(e->mPlayer) && isPlayerInGuardDistance(e->mPlayer)) {
+	const int isAttacked = isPlayerBeingAttacked(e->mPlayer) && isPlayerInGuardDistance(e->mPlayer);
+
+	if (isAttacked) {
+		if (!e->mIsGuardingLogicActive && !e->mAttackDetectedNow) {
+			// First detection of this attack encounter — start reaction timer.
+			// The AI cannot guard during the timer. This prevents input reading
+			// by simulating human reaction time. The human has a window of
+			// `reactionDelay` frames to land hits before the AI can block.
+			e->mAttackDetectedNow = 1;
+
+			// Reaction delay based on difficulty (frames at 60fps)
+			// Research: Easy 400-600ms, Normal 230-300ms, Hard 150-230ms
+			const int aiLevel = getPlayerAILevel(e->mPlayer);
+			int minDelay, maxDelay;
+			if (aiLevel <= 2) {
+				minDelay = 24; maxDelay = 36;  // Easy: 400-600ms
+			}
+			else if (aiLevel <= 5) {
+				minDelay = 14; maxDelay = 18;  // Normal: 230-300ms
+			}
+			else {
+				minDelay = 9; maxDelay = 14;    // Hard: 150-230ms
+			}
+
+			// During burst on Normal, halve the delay (AI reacts faster)
+			if (e->mBurstActive) {
+				minDelay /= 2;
+				maxDelay /= 2;
+			}
+			// During escalation on Normal, reduce delay 10% per level
+			if (aiLevel >= 3 && aiLevel <= 5) {
+				double speedMult = 1.0 - 0.10 * e->mEscalationLevel;
+				minDelay = (int)(minDelay * speedMult);
+				maxDelay = (int)(maxDelay * speedMult);
+			}
+			if (minDelay < 1) minDelay = 1;
+			if (maxDelay < minDelay) maxDelay = minDelay + 1;
+
+			e->mAttackReactionTimer = randfromInteger(minDelay, maxDelay);
+		}
+
+		// Count down reaction timer — AI cannot guard during this period
+		if (e->mAttackDetectedNow && e->mAttackReactionTimer > 0) {
+			e->mAttackReactionTimer--;
+			return;  // Still reacting — can't guard yet
+		}
+
 		if (!e->mIsGuardingLogicActive) {
-			double rand = randfrom(0, 1);
+			// Reaction delay elapsed — now decide whether to guard.
 			// Guard chance is decided ONCE per attack encounter (not per frame).
+			// Higher chance + delay = feels like a human who blocks well but
+			// needs time to react. This is fair difficulty, not input reading.
+			double rand = randfrom(0, 1);
 			//
-			// Easy (levels 1-2): 10-25% — AI blocks sometimes, human can land hits
-			// Normal (levels 3-5): 40-60% — AI blocks a fair amount, varied
-			// Hard (levels 6-8): 55-75% — AI blocks often (character CNS AI also
-			//   activates on Hard with its own 50%/frame guard logic)
+			// Easy (levels 1-2): 35-50% — blocks well once it reacts, but reacts slowly
+			// Normal (levels 3-5): 60-75% — good blocking after moderate reaction time
+			// Hard (levels 6-8): 80-90% — excellent blocking, but still needs ~150ms to react
 			const int aiLevel = getPlayerAILevel(e->mPlayer);
 			double guardPossibilityMin, guardPossibilityMax;
 			if (aiLevel <= 2) {
-				// Easy: 10% → 25%
-				guardPossibilityMin = 0.10;
-				guardPossibilityMax = 0.25;
+				guardPossibilityMin = 0.35;
+				guardPossibilityMax = 0.50;
 			}
 			else if (aiLevel <= 5) {
-				// Normal: 40% → 60%
-				guardPossibilityMin = 0.40;
-				guardPossibilityMax = 0.60;
+				guardPossibilityMin = 0.60;
+				guardPossibilityMax = 0.75;
 			}
 			else {
-				// Hard: 55% → 75%
-				guardPossibilityMin = 0.55;
-				guardPossibilityMax = 0.75;
+				guardPossibilityMin = 0.80;
+				guardPossibilityMax = 0.90;
 			}
 			double guardPossibility = guardPossibilityMin + (guardPossibilityMax - guardPossibilityMin) * e->mDifficultyFactor;
 			// Apply escalation multiplier (Normal mode only, scales with rounds lost)
 			guardPossibility *= getEscalationGuardMultiplier(e);
-			if (guardPossibility > 0.88) guardPossibility = 0.88; // Cap at 88% so human can always land hits
+			if (guardPossibility > 0.92) guardPossibility = 0.92; // Cap at 92% so human can always land hits
 			e->mWasGuardingSuccessful = (rand < guardPossibility);
 			e->mIsGuardingLogicActive = 1;
 		}
 	}
 	else {
+		// Attack ended — reset all guard state for next encounter
 		e->mIsGuardingLogicActive = 0;
+		e->mAttackDetectedNow = 0;
+		e->mAttackReactionTimer = 0;
 	}
 
 	if (e->mIsGuardingLogicActive && e->mWasGuardingSuccessful) {
@@ -685,6 +739,8 @@ void setDreamAIActive(DreamPlayer * p)
 	e.mIsCrouching = 0;
 	e.mIsJumping = 0;
 	e.mIsGuardingLogicActive = 0;
+	e.mAttackDetectedNow = 0;
+	e.mAttackReactionTimer = 0;
 	e.mCommandNames.clear();
 	e.mAIActivationCommands.clear();
 	e.mDifficultyFactor = (getPlayerAILevel(p) - 1) / 7.0;
