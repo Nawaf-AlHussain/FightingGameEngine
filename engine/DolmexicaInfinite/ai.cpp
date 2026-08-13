@@ -271,12 +271,12 @@ static void updateAIMovement(PlayerAI* e) {
 	const auto otherPlayerStateMoveType = getPlayerStateMoveType(otherPlayer);
 
 	// On Easy (levels 1-2), the AI is less aggressive about approaching.
-	// It only walks toward you when very far away (>100px instead of >50px),
-	// and stops at a comfortable mid-range (~60px) instead of getting in your
-	// face. This gives the human space to act.
+	// It walks toward you when moderately far, and stops at a comfortable
+	// mid-range instead of getting in your face. This gives the human space
+	// to act while still keeping the AI active.
 	const int aiLevel = getPlayerAILevel(e->mPlayer);
-	const int approachDist = (aiLevel <= 2) ? 100 : 50;
-	const int stopDist = (aiLevel <= 2) ? 60 : 30;
+	const int approachDist = (aiLevel <= 2) ? 70 : 50;
+	const int stopDist = (aiLevel <= 2) ? 40 : 30;
 
 	if (dist > approachDist) {
 		e->mIsMoving = 1;
@@ -387,6 +387,16 @@ static void updateAICommands(PlayerAI* e) {
 			}
 			else {
 				isSettingInput = setRandomRealCommandActiveIfTimePossible(e);
+				// On Easy, if the time check failed (complex commands need more
+				// charge time than the AI has waited), fall back to firing the
+				// command anyway. Without this, the AI never acts because most
+				// commands have minimum durations longer than the AI's timer.
+				// This is a "dumb button masher" behavior, which is appropriate
+				// for Easy difficulty.
+				if (!isSettingInput && aiLevel <= 2) {
+					setRandomRealCommandActive(e);
+					isSettingInput = 1;
+				}
 			}
 		}
 		if (!isSettingInput) return;
