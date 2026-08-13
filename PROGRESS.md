@@ -1101,3 +1101,82 @@ The original P2 dash sound bug (channel allocation overflow) was a symptom of a 
 - 4 parallel audit reports documented for future reference
 - Deployed on Vercel, auto-deploys from main branch
 
+
+---
+
+## Session: August 13, 2026 — AI Difficulty System + Reaction Delay
+
+### Summary
+Implemented a comprehensive AI difficulty system based on fighting game AI research. The core breakthrough was implementing **true reaction delay** — the #1 recommendation from academic research on fighting game AI. Also fixed multiple bugs in the AI system, input handling, and character download flow.
+
+### Commits (10 total)
+| Commit | Description |
+|--------|-------------|
+| `f3474e0` | Universal AI difficulty — split AI commands, difficulty-scaled activation |
+| `09208d8` | Easy mode too hard — character AI never activates on Easy |
+| `3234575` | P1 input leaking to P2 in vsAI mode (SDL keyboard overlap) |
+| `3a6cf94` | Normal mode AI blocks every attack — character CNS AI disabled on Normal |
+| `0666919` | Rebalance Easy/Normal — old Normal becomes Easy, new Normal is moderate |
+| `22a7d90` | Normal adaptive difficulty — gradual escalation + engine-AI bursts |
+| `a05b7fb` | Normal mode harder — higher guard, faster actions, stronger bursts |
+| `da63def` | Clean rebuild fixes ASM_CONSTS mismatch (stale .o files) |
+| `d38a257` | Easy mode AI not moving — movement threshold + command firing fixes |
+| `5e3955d` | AI reaction delay — prevents input reading (research-backed #1 fix) |
+
+### Breakthroughs
+
+1. **Universal AI command splitting** — Discovered that old-style MUGEN characters activate their custom AI via "impossible commands" (AI1-AI31, cpu1-cpu30) with `time=1`. The old engine AI fired ALL commands randomly, including these — causing the character AI to activate and fight at full difficulty (50% block per frame = 99.9% over 10 frames). Fix: split commands into `mAIActivationCommands` vs `mCommandNames`, control activation probability by difficulty.
+
+2. **Character CNS AI is fundamentally broken** — Songoku's guard logic `Random <= 500` = 50% chance PER FRAME. Over a 10-frame attack, guard probability is `1 - 0.5^10 = 99.9%`. This is NOT difficulty-scaled — once `var(51)=1`, it runs at full intensity. The only fix is to NEVER activate character CNS AI on Easy/Normal. Only Hard (levels 6-8) activates it.
+
+3. **SDL keyboard overlap** — Engine's P2 SDL mapping uses H/J/Y/U/I/K. P1's frontend keymap uses U/I/J/K. The overlap (U/I/J/K) caused P2 to act when P1 pressed keys. Root cause: P2's external input flag was never activated in vsAI mode, so SDL keyboard bits weren't cleared. Fix: call `setExternalPlayerInput(1, '')` every 16ms to activate the flag.
+
+4. **AI reaction delay** — The #1 research recommendation. Implemented true state buffering: when AI detects an attack, it starts a reaction timer. During the timer, AI CANNOT guard. After timer, rolls for guard chance. Based on arXiv 1904.03821 (pro reaction ~230ms) and FightingICE 15-frame delay. This is what makes the AI feel fair — it can't react instantly to your input.
+
+5. **Gradual escalation + bursts** — On Normal, when AI loses a round, engine AI gets harder (+20% guard, 15% faster per level). Plus 2-3 random 12-second bursts per escalated round where AI acts 6.6x faster. This provides adaptive difficulty without the jarring spikes of the original "10-second full AI" proposal.
+
+6. **Character download failures diagnosed** — Two root causes: (1) case-sensitivity mismatch between Windows (where .bat runs) and GitHub raw (case-sensitive), (2) folder/def name mismatch (BrolyDBS folder contains Broly.def).
+
+### Final AI Difficulty Tiers
+
+| Difficulty | Reaction Delay | Guard Chance (after delay) | Character CNS AI | Action Interval |
+|-----------|---------------|---------------------------|-----------------|-----------------|
+| Easy (1-2) | 24-36f (400-600ms) | 35-50% | Never | 35-60f (~0.6-1s) |
+| Normal (3-5) | 14-18f (230-300ms) | 60-75% | Never | 8-20f (~0.13-0.33s) |
+| Hard (6-8) | 9-14f (150-230ms) | 80-90% | Active (50%/frame) | 1-7f (~instant) |
+
+**Normal escalation:** +20% guard, 15% faster per round lost. 2-3 random 12-sec bursts per escalated round (6.6x faster, 2x guard). Guard capped at 92%.
+
+### Research Basis
+- arXiv 1904.03821: Pro reaction time ~230ms (14 frames at 60fps)
+- arXiv 2003.13949 (FightingICE): 15-frame delay built into platform
+- arXiv 2211.02759: "Linear difficulty" problem — difficulty tiers should feel qualitatively different
+- TV Tropes "Perfect Play AI": the #1 complaint about fighting game AI
+- Official MUGEN 1.1 AILevel trigger docs (elecbyte.com)
+- Seravy's AI Guide (mugenfreeforall.com)
+- MUGEN Wiki (mugen.fandom.com/wiki/A.I.)
+
+### Mistakes Made
+
+1. **Edit tool converts tabs to spaces** — When editing `playerdefinition.cpp` and `ai.cpp`, the Edit tool silently converted tabs to 8-space sequences, creating massive whitespace diffs. Fixed by using Python scripts (`scripts/apply-fixes.py`, `scripts/implement-reaction-delay.py`) that do targeted string replacement without touching unrelated lines. Also used `unexpand -t 8 --first-only` to restore tab indentation after Write tool creates space-indented files.
+
+2. **emsdk deleted on every environment restart** — The emsdk at `/home/z/emsdk/` gets deleted when the environment restarts. Build script auto-detects and prints an error. Had to reinstall multiple times per session. Also discovered that Emscripten port downloads are flaky — Python `urllib` fails with `RemoteDisconnected` errors. Fix: pre-download all port sources via `curl` (more reliable), then run `embuilder.py` to build them.
+
+3. **ASM_CONSTS mismatch from stale .o files** — When emsdk was reinstalled mid-session, the new version had a different SDL2 audio port ABI. Old cached .o files (from previous emsdk) were linked with new game.js, causing `ASM_CONSTS[emAsmAddr] is not a function` crash. Fix: clean rebuild (`--clean` flag) that recompiles ALL .o files from scratch.
+
+4. **Initial AI activation probability too high on Easy** — First attempt used 10% activation chance on Easy. This let character AI activate after ~5 seconds, then fight at full difficulty. Changed to 0% — character AI never activates on Easy or Normal.
+
+5. **Movement threshold too high on Easy** — Set approachDist=100px, stopDist=60px. At round start, players spawn ~100-120px apart — right at the threshold. If human moved slightly closer, AI would never exceed 100px and would stand still forever. Fixed: lowered to 70px/40px.
+
+6. **Command firing stuck in failure loop on Easy** — With ai.cheat OFF (by design), `setRandomRealCommandActiveIfTimePossible()` checks command minimum duration against AI timer. Most commands need more charge time than the AI has waited, so check fails, function returns early WITHOUT resetting timer, tries again next frame — infinite loop. Fix: on Easy, if time check fails, fire command anyway (dumb button masher behavior).
+
+7. **Research blind spot** — The fighting game AI research assumed character CNS AI is "well-authored" and recommended layering on top. This was dangerously wrong — MUGEN character AI quality varies wildly, and Songoku's 50%/frame guard is fundamentally broken. Had to override by disabling character CNS AI on Easy/Normal.
+
+### Final State
+- 62 fixes total across 5 sessions
+- AI difficulty system with true reaction delay (research-backed)
+- Universal command splitting (works for any MUGEN character)
+- Adaptive difficulty on Normal (escalation + bursts)
+- Character download failures diagnosed (case-sensitivity + folder/def mismatch)
+- Deployed on Vercel, auto-deploys from main branch
+
