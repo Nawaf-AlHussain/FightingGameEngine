@@ -250,8 +250,21 @@ static int loadNextStepAndReturnIfShouldBeRemoved(MugenAnimationHandlerElement* 
                         e->mOverallTime = getTimeWhenStepStarts(e, e->mStep);
                 }
                 else {
-                        unloadMugenAnimation(e);
-                        return 1;
+                        // Animation finished (non-looping). Don't remove the element.
+                        // Keep it alive but freeze the animation at its end state.
+                        // mOverallTime stops incrementing, so animelemtime() returns
+                        // the final value. This allows triggers like
+                        // `animelemtime(1) = 5` to fire after the animation ends.
+                        // Without this, the animation loops 0-4 forever (resetting
+                        // mOverallTime each time) and the trigger never fires.
+                        e->mHasLooped = 1;
+                        // Don't reset mStepTime or mOverallTime — freeze at current values
+                        // so animelemtime returns the last valid value (duration - 1).
+                        // But we need overallTime to be AT the duration for the trigger.
+                        // Set mOverallTime to the total animation duration.
+                        e->mOverallTime = e->mAnimation->mTotalDuration;
+                        e->mStepTime = ((MugenAnimationStep*)vector_get(&e->mAnimation->mSteps, vector_size(&e->mAnimation->mSteps) - 1))->mDuration;
+                        // Don't increment further — return 0 but don't remove
                 }
         }
         else {
