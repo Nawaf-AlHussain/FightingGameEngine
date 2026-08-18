@@ -251,20 +251,23 @@ static int loadNextStepAndReturnIfShouldBeRemoved(MugenAnimationHandlerElement* 
                 }
                 else {
                         // Animation finished (non-looping). Don't remove the element.
-                        // Keep it alive but freeze the animation at its end state.
-                        // mOverallTime stops incrementing, so animelemtime() returns
-                        // the final value. This allows triggers like
+                        // Keep it alive so mOverallTime continues counting past the
+                        // animation end. This allows triggers like
                         // `animelemtime(1) = 5` to fire after the animation ends.
-                        // Without this, the animation loops 0-4 forever (resetting
-                        // mOverallTime each time) and the trigger never fires.
+                        //
+                        // In MUGEN/Ikemen, after a non-looping animation finishes,
+                        // AnimTime and animelemtime continue counting. Without this,
+                        // mOverallTime freezes at (duration) and animelemtime(1) maxes
+                        // at (duration - 1) due to the +1 in getTimeWhenStepStarts.
+                        //
+                        // The +1 offset means animelemtime(1) = overallTime - 1.
+                        // For a 5-frame animation: overallTime goes 1-5, animelemtime
+                        // goes 0-4, never reaching 5. By keeping the element alive and
+                        // letting overallTime continue to 6, animelemtime(1) reaches 5.
                         e->mHasLooped = 1;
-                        // Don't reset mStepTime or mOverallTime — freeze at current values
-                        // so animelemtime returns the last valid value (duration - 1).
-                        // But we need overallTime to be AT the duration for the trigger.
-                        // Set mOverallTime to the total animation duration.
-                        e->mOverallTime = e->mAnimation->mTotalDuration;
-                        e->mStepTime = ((MugenAnimationStep*)vector_get(&e->mAnimation->mSteps, vector_size(&e->mAnimation->mSteps) - 1))->mDuration;
-                        // Don't increment further — return 0 but don't remove
+                        e->mStepTime = 1;
+                        // Don't reset mOverallTime — it will continue incrementing
+                        // in the else branch of updateSingleMugenAnimation.
                 }
         }
         else {
