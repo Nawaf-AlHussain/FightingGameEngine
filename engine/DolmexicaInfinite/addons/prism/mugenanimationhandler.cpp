@@ -266,8 +266,7 @@ static int loadNextStepAndReturnIfShouldBeRemoved(MugenAnimationHandlerElement* 
                         // letting overallTime continue to 6, animelemtime(1) reaches 5.
                         e->mHasLooped = 1;
                         e->mStepTime = 1;
-                        // Don't reset mOverallTime — it will continue incrementing
-                        // in the else branch of updateSingleMugenAnimation.
+                        increaseMugenDuration(&e->mOverallTime);
                 }
         }
         else {
@@ -795,6 +794,8 @@ static int getMugenAnimationElementFromTimeOffsetLoop(MugenAnimationHandlerEleme
 int getMugenAnimationElementFromTimeOffset(MugenAnimationHandlerElement* e, int tTime)
 {
         if (!vector_size(&e->mAnimation->mSteps)) return 0;
+        int stepCount = vector_size(&e->mAnimation->mSteps);
+        if (e->mStep >= stepCount) e->mStep = stepCount - 1;
 
         int ret;
         if (tTime > 0) {
@@ -834,7 +835,6 @@ static int updateSingleMugenAnimation(MugenAnimationHandlerElement* e) {
         e->mTimeDilatationNow -= updateAmount;
         while (updateAmount--) {
                 int ret = 0;
-                e->mHasLooped = 0;
                 MugenAnimationStep* step = getCurrentAnimationStep(e);
                 if (step && !isMugenAnimationStepDurationInfinite(step->mDuration) && e->mStepTime >= step->mDuration) {
                         ret = loadNextStepAndReturnIfShouldBeRemoved(e);

@@ -2397,7 +2397,7 @@ void setPlayerPhysics(DreamPlayer* p, DreamMugenStatePhysics tNewPhysics)
                 return;
         }
         else if (tNewPhysics == MUGEN_STATE_PHYSICS_STANDING) {
-                setHandledPhysicsDragCoefficient(p->mPhysicsElement, Vector3D(p->mHeader->mFiles.mConstants.mMovementData.mStandFiction, 0, 0));
+                setHandledPhysicsDragCoefficient(p->mPhysicsElement, Vector3D(1.0 - p->mHeader->mFiles.mConstants.mMovementData.mStandFiction, 0, 0));
                 setHandledPhysicsGravity(p->mPhysicsElement, Vector3D(0, 0, 0));
                 Velocity* vel = getHandledPhysicsVelocityReference(p->mPhysicsElement);
                 Acceleration* acc = getHandledPhysicsAccelerationReference(p->mPhysicsElement);
@@ -2406,7 +2406,7 @@ void setPlayerPhysics(DreamPlayer* p, DreamMugenStatePhysics tNewPhysics)
                 acc->y = 0;
         }
         else if (tNewPhysics == MUGEN_STATE_PHYSICS_CROUCHING) {
-                setHandledPhysicsDragCoefficient(p->mPhysicsElement, Vector3D(p->mHeader->mFiles.mConstants.mMovementData.mCrouchFriction, 0, 0));
+                setHandledPhysicsDragCoefficient(p->mPhysicsElement, Vector3D(1.0 - p->mHeader->mFiles.mConstants.mMovementData.mCrouchFriction, 0, 0));
                 setHandledPhysicsGravity(p->mPhysicsElement, Vector3D(0, 0, 0));
                 Position* pos = getHandledPhysicsPositionReference(p->mPhysicsElement);
                 Velocity* vel = getHandledPhysicsVelocityReference(p->mPhysicsElement);
@@ -4834,6 +4834,10 @@ DreamPlayer * clonePlayerAsHelper(DreamPlayer* p)
         DreamPlayer* helper = &gPlayerDefinition.mHelperStore[helperIDInStore];
         *helper = *p;
         helper->mHelperIDInStore = helperIDInStore;
+        memset(helper->mVars, 0, sizeof(helper->mVars));
+        memset(helper->mFloatVars, 0, sizeof(helper->mFloatVars));
+        memset(helper->mSystemVars, 0, sizeof(helper->mSystemVars));
+        memset(helper->mSystemFloatVars, 0, sizeof(helper->mSystemFloatVars));
 
         resetHelperState(helper);
         setPlayerExternalDependencies(helper);
@@ -4950,6 +4954,10 @@ DreamPlayer * createNewProjectileFromPlayer(DreamPlayer* p)
         DreamPlayer* helper = &gPlayerDefinition.mHelperStore[helperIDInStore];
         *helper = *p;
         helper->mHelperIDInStore = helperIDInStore;
+        memset(helper->mVars, 0, sizeof(helper->mVars));
+        memset(helper->mFloatVars, 0, sizeof(helper->mFloatVars));
+        memset(helper->mSystemVars, 0, sizeof(helper->mSystemVars));
+        memset(helper->mSystemFloatVars, 0, sizeof(helper->mSystemFloatVars));
 
         resetHelperState(helper);
         setPlayerExternalDependencies(helper);

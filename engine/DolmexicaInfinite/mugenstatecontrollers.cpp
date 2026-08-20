@@ -1573,7 +1573,7 @@ static void parseHelperController(DreamMugenStateController* tController, MugenD
         HelperController* e = (HelperController*)allocMemoryOnMemoryStackOrMemory(sizeof(HelperController));
 
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("helpertype", tGroup, &e->mType, "normal");
-        fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("name", tGroup, &e->mType, "normal");
+        fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("name", tGroup, &e->mName, "normal");
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("id", tGroup, &e->mID);
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("pos", tGroup, &e->mPosition);
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("postype", tGroup, &e->mPositionType, "p1");
