@@ -794,7 +794,7 @@ static void drawSortedSprite(const DrawListSpriteElement* e) {
         switch (blendType) {
         case BLEND_TYPE_ADDITION:
                 glBlendEquation(GL_FUNC_ADD);
-                glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE);
                 break;
         case BLEND_TYPE_NORMAL:
                 glBlendEquation(GL_FUNC_ADD);
