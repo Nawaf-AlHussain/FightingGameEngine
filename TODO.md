@@ -116,6 +116,23 @@ Not "exactly like Ikemen GO" — but "characters work correctly without crashes,
 
 63. ✅ **Character download failures diagnosed** — Two root causes found: (1) Case-sensitivity mismatch — manifest stores filenames as written in `.def` (e.g. `basics.st`) but actual files have different case (e.g. `Basics.st`). Windows is case-insensitive so .bat passes, but GitHub raw is case-sensitive and returns 404. Affects BroliT (2 files) and THE NIGHTMARE (4 files). (2) Folder/def name mismatch — BrolyDBS folder contains `Broly.def`, engine looks for `BrolyDBS.def`. Fix: rename files in Assets repo to match .def references, re-run `update-manifest.bat`. Full report in worklog.md (DOWNLOAD-DEBUG).
 
+### Session 6/7 (Claude + Super Z, cross-session) — Compatibility audit fixes + git history recovery
+
+**Note on numbering:** these overlap in wall-clock time with the git-history incident described in
+`HANDOFF.md` Section 4 — main was force-pushed twice, so some of this work exists on a recovered/
+reapplied branch rather than a clean linear session. See `HANDOFF.md` for the full story before
+trusting commit ordering here.
+
+64. ✅ **Friction 6x too fast** — `setHandledPhysicsDragCoefficient()` applies `velocity *= (1 - dragCoefficient)`, but `stand.friction`/`crouch.friction` (MUGEN: `velocity *= friction` directly) were passed straight through. Fixed by converting `dragCoefficient = 1.0 - friction` at both call sites in `setPlayerPhysics()`.
+65. ✅ **`ignorehitpause` implemented** — Was entirely unimplemented; the whole state machine was paused during hitpause with no exceptions. Added `mIgnoreHitPause` to `DreamMugenStateController`, gated per-controller execution in `updateSingleController()`, stopped pausing the state machine itself for hitpause (physics/animation freeze unchanged).
+66. ✅ **Helper variables not zeroed** — `clonePlayerAsHelper()`'s full struct copy inherited the parent's current var/sysvar/fvar contents instead of starting at 0. Fixed in `resetHelperState()`.
+67. ⚠️ **Cooler back-dash / animelemtime off-by-one — partially addressed, not the full fix.** See `HANDOFF.md` Section 5/6 for status and why this needs a dedicated session, not further incremental patching.
+68. ✅ **Tien/Vegetto charge additive blend (A1)** — Went through several iterations (`GL_DST_ALPHA` → `GL_ONE` → `GL_CONSTANT_ALPHA` → back to `GL_ONE`). Final state: `GL_ONE`, correct visibility, A and A1 render identically (accepted simplification). See `HANDOFF.md` Section 5 for the full mechanism and commit `ae780e5`.
+69. ✅ **ReversalDef gives no power** — `damage`/`getpower`/`givepower` CNS keys were never parsed for `ReversalDef` at all. Added parsing (mirroring HitDef's existing pattern/defaults) and applied via `addPlayerPower()` in `handleReversalDefHit()`. Deliberately not applying damage (real MUGEN's ReversalDef defaults to 0 damage).
+
+**None of items 64-69 have been built and regression-tested together.** See `HANDOFF.md` Section 3
+for the testing checklist before trusting any of them further.
+
 ---
 
 ## ⚠️ KNOWN ISSUES
