@@ -238,7 +238,7 @@ static int loadNextStepAndReturnIfShouldBeRemoved(MugenAnimationHandlerElement* 
         e->mStepTime = 1;
         
         e->mStep++;
-        if (e->mStep == vector_size(&e->mAnimation->mSteps)) {
+        if (e->mStep >= vector_size(&e->mAnimation->mSteps)) {
                 if (e->mHasAnimationFinishedCallback) {
                         e->mAnimationFinishedCB(e->mAnimationFinishedCaller);
                 }
@@ -268,6 +268,23 @@ static int loadNextStepAndReturnIfShouldBeRemoved(MugenAnimationHandlerElement* 
                         e->mStepTime = 1;
                         // Don't reset mOverallTime — it will continue incrementing
                         // in the else branch of updateSingleMugenAnimation.
+                        //
+                        // OOB read fix: pin mStep at the last valid index instead of
+                        // leaving it at vector_size (or letting it grow further on each
+                        // subsequent call - this function keeps getting invoked every
+                        // time mStepTime cycles back up to the final step's own
+                        // mDuration, since the element is now kept alive indefinitely
+                        // per the fix above, and this branch's original `== ` check only
+                        // matched on the FIRST overrun, after which e->mStep grew by 1
+                        // on every later call forever with no bound). Several call sites
+                        // (getMugenAnimationElementFromTimeOffset and
+                        // getMugenAnimationElementFromTimeOffsetLoop) read e->mStep
+                        // directly via vector_get() with no clamping, unlike
+                        // getCurrentAnimationStep()'s min()-clamped read, so an
+                        // unbounded mStep was a real out-of-bounds memory read once an
+                        // animation had been "finished" for a while, not just a
+                        // theoretical one.
+                        e->mStep = vector_size(&e->mAnimation->mSteps) - 1;
                 }
         }
         else {

@@ -55,6 +55,16 @@ engine. **Every C++ source change in this repo is inert on the live site until s
 rebuilds the WASM and commits the new binaries.** Check `public/game/build-version.json` after any
 deploy to confirm what's actually live: `curl https://fighting-game-engine.vercel.app/game/build-version.json`.
 
+**Also don't assume a push = a live deploy.** As of this writing, the repo's latest commit
+(`556e737`) has build `dev-1787656270` in `public/game/build-version.json`, but the actual live
+site at `fighting-game-engine.vercel.app/game/build-version.json` was still serving
+`dev-1787635702` (an *older* build, several commits back — still has the `GL_CONSTANT_ALPHA`
+black-rectangle bug this repo has since fixed). Whoever picks this up next: check the live
+`build-version.json` against the repo's before trusting that anything described as "fixed" here is
+actually what a user testing the live site will see, and check the Vercel dashboard/deploy logs if
+they don't match — this needs a human with Vercel access to investigate, it's not something fixable
+from source.
+
 ---
 
 ## 3. HOW TO BUILD AND TEST
@@ -147,6 +157,7 @@ explicitly here:
 | Animation time off-by-one (Cooler back-dash freeze) | ⚠️ Partially addressed | A narrower patch than the full 0-indexed rewrite this problem really needs (see the "correct fix" description in `docs/deep-dives/` and old worklog entries) — keeps the animation element alive past its nominal duration instead of unloading it, letting `animelemtime` reach values it couldn't before. Debug-log-verified against Cooler specifically. **No evidence it's been regression-tested against other characters' jump/attack animations, which is exactly the failure mode this kind of patch has broken before.** Test this specifically before trusting it. |
 | Tien/Vegetto charge additive blend (A1) invisible/wrong | ✅ Fixed, simplified | Went through `GL_DST_ALPHA` (invisible) → `GL_ONE` (visible, but reported as still not working) → `GL_CONSTANT_ALPHA` + `glBlendColor` (theoretically correct A1 semantics, but empirically caused a black rectangle over every sprite's transparent quad padding — a real structural limit of fixed-function blending, not a state-leak bug) → back to `GL_ONE` (final: correct visibility, no artifact, A and A1 render identically — an accepted, minor simplification). **Not yet visually re-verified after the final revert.** See the commit message on `ae780e5` for the full mechanism. |
 | HitOverride ignored when HitDef sets `p2stateno` (armor characters getting thrown) | ✅ Fixed | In `setPlayerHitStatesPlayer()` (`playerdefinition.cpp`), the `tHasMatchingHitOverride` check was nested inside the `p2stateno == -1` branch, so a throw's `p2stateno` redirect bypassed HitOverride entirely. Fixed by checking `tHasMatchingHitOverride` first, unconditionally, before the `p2stateno == -1` / `p2getp1state` / plain-`p2stateno` branches. `setPlayerHitStatesNonPlayer()` (helpers/projectiles) was already correct and untouched — note it doesn't handle `p2stateno` for helpers at all, a possible separate gap, not investigated. **Source-traced only — this is the newest fix, not built or run at all yet. Test specifically: an armor/counter character with a HitOverride against a throw-type attack.** |
+| OOB read after animation end (`mStep` growing unbounded past the animation's step count) | ✅ Fixed | Root cause: `loadNextStepAndReturnIfShouldBeRemoved`'s non-looping "keep alive" branch (added by the animelemtime fix above) only matched `mStep == vector_size(...)` on the *first* overrun; every later call to this function (which keeps happening — that's the whole point of "kept alive") incremented `mStep` again with nothing to catch it, so it grew by 1 forever, unbounded, for as long as the finished animation stayed alive. Two call sites (`getMugenAnimationElementFromTimeOffset` and its `...Loop` helper) read `e->mStep` directly via `vector_get()` with **no** clamping — unlike `getCurrentAnimationStep()`'s safe `min(mStep, count-1)` read — so this was a real out-of-bounds memory read once an animation had been finished for more than an instant, not just a theoretical one. Fixed by pinning `mStep` at the last valid index every time instead of leaving it to drift, and changed the guard from `==` to `>=` for defense in depth. **Source-traced only, not built or run.** |
 
 **None of the above has ever been built and tested all together in one pass.** Do that before
 trusting any of it further, per the checklist in Section 3.
@@ -160,10 +171,11 @@ trusting any of it further, per the checklist in Section 3.
 2. ~~HitOverride + p2stateno logic wrong~~ — **Fixed in source this session, see Section 5. Not yet
    built or tested — verifying this (armor/counter character with a HitOverride vs. a throw) should
    be part of the Section 3 regression pass, not a separate task.**
-3. **OOB read after animation end** — `mStep` can grow past the animation's step-vector size.
-   Likely lives in the same area as the animation-time code (`loadNextStepAndReturnIfShouldBeRemoved`
-   in `mugenanimationhandler.cpp`) — worth investigating together with #4 below since they're
-   probably related.
+3. ~~OOB read after animation end~~ — **Fixed in source this session, see Section 5.** Root cause
+   was `mStep` drifting unbounded past the step-vector size once a finished animation is kept
+   alive (needed for the animelemtime fix), read without clamping at two call sites. Not yet
+   built or tested — add to the Section 3 regression pass: a character whose animation finishes
+   and sits idle for a while, then check `AnimElemNo`/backward-offset triggers still behave.
 4. **Animation time system — the real fix.** The current patch (Section 5) is a narrower, less
    risky change than the full rewrite this problem actually calls for. The full fix means making
    `mOverallTime` genuinely 0-indexed (matching Ikemen), which touches
