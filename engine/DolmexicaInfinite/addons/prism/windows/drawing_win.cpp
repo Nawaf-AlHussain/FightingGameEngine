@@ -491,7 +491,8 @@ static void usePrismShader() {
         usePrismShaderGeneral(gOpenGLData.mPrismShader);
 }
 
-#ifndef __EMSCRIPTEN__
+// Enable FBO functions for ALL builds including WASM — needed for
+// shader-based additive/subtraction blending.
 static void createFBO(GLuint* tTarget, GLuint* tColorBuffer) {
         glGenFramebuffers(1, tTarget);
         glBindFramebuffer(GL_FRAMEBUFFER, *tTarget);
@@ -528,7 +529,6 @@ static void recreateFBOs() {
         unloadFBOs();
         initFBOs();
 }
-#endif
 
 #ifndef __EMSCRIPTEN__
 static void GLAPIENTRY
@@ -558,9 +558,9 @@ static void initOpenGL() {
 
         glGenBuffers(1, &gOpenGLData.mVboHandle);
         glGenBuffers(1, &gOpenGLData.mElementsHandle);
-#ifndef __EMSCRIPTEN__
+        // Enable FBO for ALL builds including WASM — needed for shader-based
+        // additive/subtraction blending (the BG sampler reads from the FBO).
         initFBOs();
-#endif
 
         usePrismShader();
 
@@ -690,10 +690,10 @@ void startDrawing() {
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_COLOR_BUFFER_BIT);
-#ifndef __EMSCRIPTEN__
+        // Bind FBO for ALL builds including WASM — needed for shader-based
+        // additive/subtraction blending (BG sampler reads from FBO).
         glBindFramebuffer(GL_FRAMEBUFFER, gOpenGLData.mFBO);
         glClear(GL_COLOR_BUFFER_BIT);
-#endif
 
         clearDrawVector();
 }
@@ -781,7 +781,10 @@ static void drawSortedSprite(const DrawListSpriteElement* e) {
         Texture texture = (Texture)e->mTexture.mTexture->mData;
         auto blendType = e->mData.mBlendType;
         ShaderBlendType shaderBlendType = SHADER_BLEND_TYPE_NORMAL;
-#ifndef __EMSCRIPTEN__
+        // Enable shader-based additive/subtraction blending for ALL builds including WASM.
+        // The shader reads the framebuffer via the BG texture sampler (bound at line 756
+        // as gOpenGLData.mFBOColorAttachment), which works in WebGL without glMemoryBarrier.
+        // The glMemoryBarrier call below is already guarded by #ifndef __EMSCRIPTEN__.
         if (blendType == BLEND_TYPE_ADDITION) {
                 blendType = BLEND_TYPE_NORMAL;
                 shaderBlendType = SHADER_BLEND_TYPE_ADDITION;
@@ -789,7 +792,6 @@ static void drawSortedSprite(const DrawListSpriteElement* e) {
                 blendType = BLEND_TYPE_NORMAL;
                 shaderBlendType = SHADER_BLEND_TYPE_SUBTRACTION;
         }
-#endif
 
         switch (blendType) {
         case BLEND_TYPE_ADDITION:
