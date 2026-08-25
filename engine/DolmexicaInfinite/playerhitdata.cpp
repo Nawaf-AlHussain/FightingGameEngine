@@ -1761,6 +1761,58 @@ void setReversalDefPauseTime(DreamPlayer* tPlayer, int tPlayer1PauseTime, int tP
         e->mReversalDef.mPlayer2PauseTime = tPlayer2PauseTime;
 }
 
+void setReversalDefDamage(DreamPlayer* tPlayer, int tDamage, int tGuardDamage)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mPassiveHitData;
+        e->mReversalDef.mDamage = tDamage;
+        e->mReversalDef.mGuardDamage = tGuardDamage;
+}
+
+void setReversalDefGetPower(DreamPlayer* tPlayer, int tGetPower, int tGetPowerGuard)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mPassiveHitData;
+        e->mReversalDef.mGetPower = tGetPower;
+        e->mReversalDef.mGetPowerGuard = tGetPowerGuard;
+}
+
+void setReversalDefGivePower(DreamPlayer* tPlayer, int tGivePower, int tGivePowerGuard)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mPassiveHitData;
+        e->mReversalDef.mGivePower = tGivePower;
+        e->mReversalDef.mGivePowerGuard = tGivePowerGuard;
+}
+
+int getReversalDefGetPower(DreamPlayer* tPlayer)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mPassiveHitData;
+        return e->mReversalDef.mGetPower;
+}
+
+int getReversalDefGetPowerGuard(DreamPlayer* tPlayer)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mPassiveHitData;
+        return e->mReversalDef.mGetPowerGuard;
+}
+
+int getReversalDefGivePower(DreamPlayer* tPlayer)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mPassiveHitData;
+        return e->mReversalDef.mGivePower;
+}
+
+int getReversalDefGivePowerGuard(DreamPlayer* tPlayer)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mPassiveHitData;
+        return e->mReversalDef.mGivePowerGuard;
+}
+
 int isReversalDefSparkInPlayerFile(DreamPlayer* tPlayer)
 {
         assert(isGeneralPlayer(tPlayer));

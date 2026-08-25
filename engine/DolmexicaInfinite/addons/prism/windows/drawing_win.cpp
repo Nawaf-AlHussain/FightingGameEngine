@@ -799,18 +799,30 @@ static void drawSortedSprite(const DrawListSpriteElement* e) {
                 // 1.0 for plain "A", 0.5 for "A1" per MUGEN spec - see mDstBlendFactor in
                 // mugenanimationreader.cpp). That shader path is deliberately skipped for
                 // __EMSCRIPTEN__ (likely because it relies on glMemoryBarrier, which WebGL
-                // doesn't support), so WASM falls through to this fixed-function path instead -
-                // which previously hardcoded GL_DST_ALPHA (read: destination alpha in the WASM
-                // framebuffer is usually 0, so additive sprites rendered ~invisible) and was
-                // later "fixed" to hardcode GL_ONE (visible, but silently drops the A1 50%
-                // dest-weight entirely, rendering A and A1 identically). Neither hardcoded
-                // constant can represent mDestAlpha, since it varies per sprite (0.5 vs 1.0).
-                // Fixed-function blending CAN represent it via GL_CONSTANT_ALPHA + glBlendColor,
-                // using the same mDestAlpha value the shader path already receives, so use that
-                // instead of a hardcoded factor.
+                // doesn't support), so WASM falls through to this fixed-function path instead.
+                //
+                // History: GL_DST_ALPHA (original) -> invisible, WASM's default framebuffer has
+                // no real destination alpha to read. GL_ONE (first fix attempt) -> visible, but
+                // drops the A/A1 destination-weight distinction entirely (harmless simplification).
+                // GL_CONSTANT_ALPHA + glBlendColor(0,0,0,mDestAlpha) (second fix attempt, mine) ->
+                // correctly reproduces the A1 50% dest-weight in THEORY, but empirically produces a
+                // black rectangle over the sprite's full quad (confirmed in build dev-1787635702).
+                // This is NOT stray/leaked GL state (GL_ONE_MINUS_SRC_ALPHA, used by
+                // BLEND_TYPE_NORMAL below, never reads the blend-color register - that's not
+                // possible per the GL/WebGL spec). It's a real, structural limitation: fixed-
+                // function blending applies dst*constAlpha to EVERY fragment of the draw call
+                // uniformly, including the sprite quad's transparent padding around the actual
+                // character silhouette. The shader path avoids this via a per-pixel conditional
+                // (destinationBlendFactor forced to 1.0 when srcColor.w == 0.0) that fixed-function
+                // blending has no equivalent for - so at destAlpha=0.5, all that transparent
+                // padding legitimately darkens the background by ~50%, which is what was observed.
+                // Back to GL_ONE: correct visibility, A/A1 rendered identically (undetectable
+                // difference for a subtle glow effect), no quad-darkening artifact. A real fix for
+                // the A1 distinction needs either porting the shader path to WASM (verify
+                // glMemoryBarrier isn't actually required first) or premultiplying/keying sprite
+                // textures so transparent texels can't contribute to the destination term at all.
                 glBlendEquation(GL_FUNC_ADD);
-                glBlendColor(0.0f, 0.0f, 0.0f, (GLfloat)e->mData.mDestAlpha);
-                glBlendFunc(GL_SRC_ALPHA, GL_CONSTANT_ALPHA);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE);
                 break;
         case BLEND_TYPE_NORMAL:
                 glBlendEquation(GL_FUNC_ADD);

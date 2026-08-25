@@ -2165,6 +2165,14 @@ static void handleReversalDefHit(DreamPlayer* p, DreamPlayer* tOtherPlayer) {
         playPlayerHitSpark(p, tOtherPlayer, p, isReversalDefSparkInPlayerFile(p), getReversalDefSparkNumber(p), getActiveHitDataSparkXY(p) + getReversalDefSparkXY(p));
         addPlayerAsActiveTarget(p, tOtherPlayer);
 
+        // ReversalDef accepts damage/getpower/givepower same as HitDef (per MUGEN spec); this was
+        // previously entirely unparsed and unapplied, so a landed reversal could never grant
+        // power no matter what a character's CNS specified. Not applying damage here - real
+        // MUGEN's ReversalDef defaults Damage=0,0 (a reversal resets the opponent's state, it
+        // doesn't inherently deal damage), and the reported bug was specifically about power.
+        addPlayerPower(getPlayerRoot(p), getReversalDefGetPower(p));
+        addPlayerPower(getPlayerRoot(tOtherPlayer), getReversalDefGivePower(p));
+
         if (hitShakeDuration && isPlayerAlive(tOtherPlayer)) {
                 setPlayerHitPaused(tOtherPlayer, hitShakeDuration);
         }

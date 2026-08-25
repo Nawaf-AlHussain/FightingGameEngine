@@ -90,6 +90,17 @@ typedef struct {
         int mPlayer1StateNumber;
         int mHasPlayer2StateNumber;
         int mPlayer2StateNumber;
+
+        // damage/getpower/giveppower: ReversalDef accepts these same as HitDef (per MUGEN spec,
+        // GetPower/GivePower default to Default.Attack/GetHit.LifeToPowerMul * Damage, halved for
+        // the guard slot). Stored separately from the general HitDef PlayerHitData (mPassiveHitData)
+        // since a reversal isn't a normal hit and shouldn't touch that shared state.
+        int mDamage;
+        int mGuardDamage;
+        int mGetPower;
+        int mGetPowerGuard;
+        int mGivePower;
+        int mGivePowerGuard;
 } ReversalDef;
 
 typedef struct {
@@ -529,6 +540,13 @@ void addHitDataReversalDefFlag2(DreamPlayer* tPlayer, const char* tFlag);
 int getReversalDefPlayer1PauseTime(DreamPlayer* tPlayer);
 int getReversalDefPlayer2PauseTime(DreamPlayer* tPlayer);
 void setReversalDefPauseTime(DreamPlayer* tPlayer, int tPlayer1PauseTime, int tPlayer2PauseTime);
+void setReversalDefDamage(DreamPlayer* tPlayer, int tDamage, int tGuardDamage);
+void setReversalDefGetPower(DreamPlayer* tPlayer, int tGetPower, int tGetPowerGuard);
+void setReversalDefGivePower(DreamPlayer* tPlayer, int tGivePower, int tGivePowerGuard);
+int getReversalDefGetPower(DreamPlayer* tPlayer);
+int getReversalDefGetPowerGuard(DreamPlayer* tPlayer);
+int getReversalDefGivePower(DreamPlayer* tPlayer);
+int getReversalDefGivePowerGuard(DreamPlayer* tPlayer);
 int isReversalDefSparkInPlayerFile(DreamPlayer* tPlayer);
 int getReversalDefSparkNumber(DreamPlayer* tPlayer);
 void setReversalDefSparkNumber(DreamPlayer* tPlayer, int tIsInPlayerFile, int tNumber);

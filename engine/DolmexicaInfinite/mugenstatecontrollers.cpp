@@ -1839,6 +1839,9 @@ typedef struct {
         DreamMugenAssignment* mP1StateNo;
         int mHasP2StateNo;
         DreamMugenAssignment* mP2StateNo;
+        DreamMugenAssignment* mDamage;
+        DreamMugenAssignment* mGetPower;
+        DreamMugenAssignment* mGivePower;
 } ReversalDefinitionController;
 
 static void parseReversalDefinitionController(DreamMugenStateController* tController, MugenDefScriptGroup* tGroup) {
@@ -1851,6 +1854,14 @@ static void parseReversalDefinitionController(DreamMugenStateController* tContro
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("hitsound", tGroup, &e->mHitSound);
         e->mHasP1StateNo = fetchDreamAssignmentFromGroupAndReturnWhetherItExists("p1stateno", tGroup, &e->mP1StateNo);
         e->mHasP2StateNo = fetchDreamAssignmentFromGroupAndReturnWhetherItExists("p2stateno", tGroup, &e->mP2StateNo);
+        // damage/getpower/givepower: ReversalDef accepts these same as HitDef per MUGEN spec
+        // (both default to 0/0 damage -> 0 power unless the character explicitly sets them).
+        // Previously not parsed at all, so a character's ReversalDef could never grant power no
+        // matter what they wrote in their CNS - see handleReversalDefHit in playerdefinition.cpp
+        // for where these get applied.
+        fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("damage", tGroup, &e->mDamage);
+        fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("getpower", tGroup, &e->mGetPower);
+        fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("givepower", tGroup, &e->mGivePower);
 
         tController->mType = MUGEN_STATE_CONTROLLER_TYPE_REVERSAL_DEFINITION;
         tController->mData = e;
@@ -1870,6 +1881,9 @@ static void unloadReversalDefinitionController(DreamMugenStateController* tContr
         if (e->mHasP2StateNo) {
                 destroyDreamMugenAssignment(e->mP2StateNo);
         }
+        destroyDreamMugenAssignment(e->mDamage);
+        destroyDreamMugenAssignment(e->mGetPower);
+        destroyDreamMugenAssignment(e->mGivePower);
 
         freeMemory(e);
 }
@@ -5029,6 +5043,17 @@ static int handleReversalDefinition(DreamMugenStateController* tController, Drea
         else {
                 setReversalDefP2StateNo(tPlayer, 0);
         }
+
+        // damage/getpower/givepower: matches HitDef's own defaults (Damage=0,0 unless set;
+        // GetPower/GivePower default to LifeToPowerMul * Damage, halved for the guard slot).
+        // See handleReversalDefHit() in playerdefinition.cpp for where these actually get applied
+        // via addPlayerPower() - previously this whole block didn't exist, so a reversal could
+        // never grant power no matter what a character's CNS specified.
+        int reversalDamage, reversalGuardDamage;
+        evaluateDreamAssignmentAndReturnAsTwoIntegersWithDefaultValues(&e->mDamage, tPlayer, &reversalDamage, &reversalGuardDamage, 0, 0);
+        setReversalDefDamage(tPlayer, reversalDamage, reversalGuardDamage);
+        handleHitDefinitionSinglePowerAddition(&e->mGetPower, tPlayer, tPlayer, setReversalDefGetPower, getDreamDefaultAttackDamageDoneToPowerMultiplier(), reversalDamage);
+        handleHitDefinitionSinglePowerAddition(&e->mGivePower, tPlayer, tPlayer, setReversalDefGivePower, getDreamDefaultAttackDamageReceivedToPowerMultiplier(), reversalDamage);
 
         return 0;
 }
