@@ -201,6 +201,7 @@ typedef struct {
 	int16_t mAccessAmount;
 	uint8_t mType;
 	uint8_t mTarget;
+	uint8_t mIgnoreHitPause;
 } DreamMugenStateController;
 
 typedef struct {

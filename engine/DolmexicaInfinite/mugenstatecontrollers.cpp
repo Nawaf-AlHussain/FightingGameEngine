@@ -2639,6 +2639,15 @@ static void parseStateControllerPersistence(DreamMugenStateController* tControll
         tController->mAccessAmount = 0;
 }
 
+// MUGEN spec: "ignorehitpause" (0/1 integer constant, default 0) controls whether THIS
+// individual state controller is still evaluated/executed while its owner is in hitpause.
+// Default (0) = skipped entirely during hitpause (not evaluated, doesn't advance the
+// persistence counter). 1 = runs normally even during hitpause. Used by armor/counter/combo
+// characters to keep specific controllers (ChangeState, VarSet, etc.) alive through hitstop.
+static void parseStateControllerIgnoreHitPause(DreamMugenStateController* tController, MugenDefScriptGroup* tGroup) {
+        tController->mIgnoreHitPause = (uint8_t)getMugenDefIntegerOrDefaultAsGroup(tGroup, "ignorehitpause", 0);
+}
+
 static void parseStateControllerTarget(DreamMugenStateController* tController, MugenDefScriptGroup* tGroup) {
         if (!isMugenDefStringVariableAsGroup(tGroup, "override.target"))
         {
@@ -2669,6 +2678,7 @@ DreamMugenStateController * parseDreamMugenStateControllerFromGroup(MugenDefScri
         parseStateControllerTriggers(ret, tGroup);
         parseStateControllerPersistence(ret, tGroup);
         parseStateControllerTarget(ret, tGroup);
+        parseStateControllerIgnoreHitPause(ret, tGroup);
 
         return ret;
 }

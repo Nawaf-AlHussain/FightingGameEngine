@@ -53,6 +53,14 @@ static void updateSingleController(void* tCaller, void* tData) {
         
         if (!caller->mRegisteredState->mIsInStoryMode && caller->mRegisteredState->mPlayer && isPlayerDestroyed(caller->mRegisteredState->mPlayer)) return;
         if (caller->mHasChangedState) return;
+
+        // MUGEN semantics: while the state machine's owner is in hitpause, a state controller
+        // is skipped entirely (not evaluated, doesn't consume its persistence count) unless it
+        // was declared with ignorehitpause = 1. This lets armor/counter/combo characters keep
+        // specific controllers (ChangeState, VarSet, etc.) running through hitstop.
+        if (!caller->mRegisteredState->mIsInStoryMode && caller->mRegisteredState->mPlayer
+                && isPlayerHitPaused(caller->mRegisteredState->mPlayer) && !controller->mIgnoreHitPause) return;
+
         if (!evaluateTrigger(&controller->mTrigger, caller->mRegisteredState->mPlayer)) return;
 
         controller->mAccessAmount++;
@@ -138,7 +146,15 @@ static void updateSingleStateMachineByReference(RegisteredMugenStateMachine* tRe
         if (tRegisteredState->mIsPaused) return;
         assert(tRegisteredState->mIsInStoryMode || !isPlayerProjectile(tRegisteredState->mPlayer));
 
-        tRegisteredState->mTimeInState++;
+        // NOTE: the state machine itself is intentionally still walked here even while its
+        // player is in hitpause (mIsPaused is no longer set for hitpause — see pausePlayer() in
+        // playerdefinition.cpp) so that individual ignorehitpause = 1 controllers can still run
+        // (gated in updateSingleController). Only the state's own "Time" clock stays frozen to
+        // match MUGEN's freeze-frame semantics for everything that didn't opt out of hitpause.
+        const int isFrozenByHitPause = !tRegisteredState->mIsInStoryMode && tRegisteredState->mPlayer && isPlayerHitPaused(tRegisteredState->mPlayer);
+        if (!isFrozenByHitPause) {
+                tRegisteredState->mTimeInState++;
+        }
         if (!tRegisteredState->mIsInHelperMode) {
                 if (!tRegisteredState->mIsUsingTemporaryOtherStateMachine) {
                         updateSingleState(tRegisteredState, -3, 1);

@@ -269,6 +269,18 @@ static void initHitDefAttributeSlot(DreamHitDefAttributeSlot* tSlot) {
 }
 
 static void resetHelperState(DreamPlayer* p) {
+        // Helper variables not zeroed: clonePlayerAsHelper() does `*helper = *p`, a full struct
+        // copy from the parent, which includes the parent's CURRENT var/sysvar/fvar/fsysvar
+        // contents. Per MUGEN spec, every helper gets its own independent variable space starting
+        // at 0, not inherited values. loadPlayerState() (used for root players) already memsets
+        // these before calling resetHelperState(), so this is a no-op there; it's the actual
+        // helper-creation path (clonePlayerAsHelper) that was missing it, breaking helper-based
+        // charge/counter systems that assume Var(n) starts at 0.
+        memset(p->mVars, 0, sizeof p->mVars);
+        memset(p->mSystemVars, 0, sizeof p->mSystemVars);
+        memset(p->mFloatVars, 0, sizeof p->mFloatVars);
+        memset(p->mSystemFloatVars, 0, sizeof p->mSystemFloatVars);
+
         p->mHelpers = new_list();
         p->mProjectiles = new_int_map();
 
@@ -2397,7 +2409,11 @@ void setPlayerPhysics(DreamPlayer* p, DreamMugenStatePhysics tNewPhysics)
                 return;
         }
         else if (tNewPhysics == MUGEN_STATE_PHYSICS_STANDING) {
-                setHandledPhysicsDragCoefficient(p->mPhysicsElement, Vector3D(p->mHeader->mFiles.mConstants.mMovementData.mStandFiction, 0, 0));
+                // setHandledPhysicsDragCoefficient applies velocity *= (1 - dragCoefficient) per tick.
+                // MUGEN's stand.friction is applied as velocity *= friction directly, so we must
+                // convert: dragCoefficient = 1 - friction. (Previously passed friction straight
+                // through, e.g. 0.85 -> velocity *= 0.15 instead of the correct velocity *= 0.85.)
+                setHandledPhysicsDragCoefficient(p->mPhysicsElement, Vector3D(1.0 - p->mHeader->mFiles.mConstants.mMovementData.mStandFiction, 0, 0));
                 setHandledPhysicsGravity(p->mPhysicsElement, Vector3D(0, 0, 0));
                 Velocity* vel = getHandledPhysicsVelocityReference(p->mPhysicsElement);
                 Acceleration* acc = getHandledPhysicsAccelerationReference(p->mPhysicsElement);
@@ -2406,7 +2422,8 @@ void setPlayerPhysics(DreamPlayer* p, DreamMugenStatePhysics tNewPhysics)
                 acc->y = 0;
         }
         else if (tNewPhysics == MUGEN_STATE_PHYSICS_CROUCHING) {
-                setHandledPhysicsDragCoefficient(p->mPhysicsElement, Vector3D(p->mHeader->mFiles.mConstants.mMovementData.mCrouchFriction, 0, 0));
+                // See MUGEN_STATE_PHYSICS_STANDING above: convert friction -> dragCoefficient.
+                setHandledPhysicsDragCoefficient(p->mPhysicsElement, Vector3D(1.0 - p->mHeader->mFiles.mConstants.mMovementData.mCrouchFriction, 0, 0));
                 setHandledPhysicsGravity(p->mPhysicsElement, Vector3D(0, 0, 0));
                 Position* pos = getHandledPhysicsPositionReference(p->mPhysicsElement);
                 Velocity* vel = getHandledPhysicsVelocityReference(p->mPhysicsElement);
@@ -3683,11 +3700,15 @@ int isPlayerHitPaused(DreamPlayer* p)
 static void pausePlayer(DreamPlayer* p) {
         if (isPlayerPaused(p)) return;
 
+        // Hitpause freezes physics and animation, but deliberately does NOT pause the player's
+        // state machine (mugenstatehandler.cpp) anymore. State controller execution during
+        // hitpause is instead gated per-controller by ignorehitpause (see updateSingleController
+        // in mugenstatehandler.cpp), matching MUGEN spec: everything is skipped by default during
+        // hitpause except controllers explicitly marked ignorehitpause = 1.
         pauseHandledPhysics(p->mPhysicsElement);
         pauseMugenAnimation(p->mAnimationElement);
         pauseMugenAnimation(p->mShadow.mAnimationElement);
         pauseMugenAnimation(p->mReflection.mAnimationElement);
-        pauseDreamRegisteredStateMachine(p->mRegisteredStateMachine);
 }
 
 static void forceUnpausePlayer(DreamPlayer* p) {
@@ -3695,7 +3716,6 @@ static void forceUnpausePlayer(DreamPlayer* p) {
         unpauseMugenAnimation(p->mAnimationElement);
         unpauseMugenAnimation(p->mShadow.mAnimationElement);
         unpauseMugenAnimation(p->mReflection.mAnimationElement);
-        unpauseDreamRegisteredStateMachine(p->mRegisteredStateMachine);
         p->mIsHitPaused = 0;
 }
 
