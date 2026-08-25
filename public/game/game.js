@@ -8110,6 +8110,8 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
 
   var _glBindTexture = _emscripten_glBindTexture;
 
+  var _glBlendColor = _emscripten_glBlendColor;
+
   var _glBlendEquation = _emscripten_glBlendEquation;
 
   var _glBlendFunc = _emscripten_glBlendFunc;
@@ -9128,6 +9130,8 @@ var wasmImports = {
   glBindFramebuffer: _glBindFramebuffer,
   /** @export */
   glBindTexture: _glBindTexture,
+  /** @export */
+  glBlendColor: _glBlendColor,
   /** @export */
   glBlendEquation: _glBlendEquation,
   /** @export */
