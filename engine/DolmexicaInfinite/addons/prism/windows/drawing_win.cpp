@@ -793,8 +793,24 @@ static void drawSortedSprite(const DrawListSpriteElement* e) {
 
         switch (blendType) {
         case BLEND_TYPE_ADDITION:
+                // Native builds implement A/A1 additive blending in the fragment shader (see
+                // shaderBlendType above), which reads the framebuffer directly and can weight the
+                // destination per-pixel by DestinationAlphaColorFactor.x (e->mData.mDestAlpha:
+                // 1.0 for plain "A", 0.5 for "A1" per MUGEN spec - see mDstBlendFactor in
+                // mugenanimationreader.cpp). That shader path is deliberately skipped for
+                // __EMSCRIPTEN__ (likely because it relies on glMemoryBarrier, which WebGL
+                // doesn't support), so WASM falls through to this fixed-function path instead -
+                // which previously hardcoded GL_DST_ALPHA (read: destination alpha in the WASM
+                // framebuffer is usually 0, so additive sprites rendered ~invisible) and was
+                // later "fixed" to hardcode GL_ONE (visible, but silently drops the A1 50%
+                // dest-weight entirely, rendering A and A1 identically). Neither hardcoded
+                // constant can represent mDestAlpha, since it varies per sprite (0.5 vs 1.0).
+                // Fixed-function blending CAN represent it via GL_CONSTANT_ALPHA + glBlendColor,
+                // using the same mDestAlpha value the shader path already receives, so use that
+                // instead of a hardcoded factor.
                 glBlendEquation(GL_FUNC_ADD);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+                glBlendColor(0.0f, 0.0f, 0.0f, (GLfloat)e->mData.mDestAlpha);
+                glBlendFunc(GL_SRC_ALPHA, GL_CONSTANT_ALPHA);
                 break;
         case BLEND_TYPE_NORMAL:
                 glBlendEquation(GL_FUNC_ADD);
