@@ -1641,14 +1641,16 @@ static void handlePlayerHitOverride(DreamPlayer* p, DreamPlayer* tOtherPlayer, i
 }
 
 static void setPlayerHitStatesPlayer(DreamPlayer* p, DreamPlayer* tOtherPlayer, int tHasMatchingHitOverride) {
-        if (getActiveHitDataPlayer2StateNumber(p) == -1) {
+        if (tHasMatchingHitOverride) {
+                int nextState;
+                handlePlayerHitOverride(p, tOtherPlayer, &nextState);
+                changePlayerStateToSelf(p, nextState);
+        }
+        else if (getActiveHitDataPlayer2StateNumber(p) == -1) {
 
                 int nextState;
 
-                if (tHasMatchingHitOverride) {
-                        handlePlayerHitOverride(p, tOtherPlayer, &nextState);
-                }
-                else if (getPlayerStateType(p) == MUGEN_STATE_TYPE_STANDING) {
+                if (getPlayerStateType(p) == MUGEN_STATE_TYPE_STANDING) {
                         if (isPlayerGuarding(p)) {
                                 nextState = 150;
                         }

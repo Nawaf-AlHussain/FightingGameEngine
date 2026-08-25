@@ -146,6 +146,7 @@ explicitly here:
 | `ReversalDef` grants no power | ✅ Fixed | Implemented `damage`/`getpower`/`givepower` CNS parsing + application, matching HitDef's existing pattern. **Not yet tested at all — this is the newest fix, treat it with the most suspicion.** |
 | Animation time off-by-one (Cooler back-dash freeze) | ⚠️ Partially addressed | A narrower patch than the full 0-indexed rewrite this problem really needs (see the "correct fix" description in `docs/deep-dives/` and old worklog entries) — keeps the animation element alive past its nominal duration instead of unloading it, letting `animelemtime` reach values it couldn't before. Debug-log-verified against Cooler specifically. **No evidence it's been regression-tested against other characters' jump/attack animations, which is exactly the failure mode this kind of patch has broken before.** Test this specifically before trusting it. |
 | Tien/Vegetto charge additive blend (A1) invisible/wrong | ✅ Fixed, simplified | Went through `GL_DST_ALPHA` (invisible) → `GL_ONE` (visible, but reported as still not working) → `GL_CONSTANT_ALPHA` + `glBlendColor` (theoretically correct A1 semantics, but empirically caused a black rectangle over every sprite's transparent quad padding — a real structural limit of fixed-function blending, not a state-leak bug) → back to `GL_ONE` (final: correct visibility, no artifact, A and A1 render identically — an accepted, minor simplification). **Not yet visually re-verified after the final revert.** See the commit message on `ae780e5` for the full mechanism. |
+| HitOverride ignored when HitDef sets `p2stateno` (armor characters getting thrown) | ✅ Fixed | In `setPlayerHitStatesPlayer()` (`playerdefinition.cpp`), the `tHasMatchingHitOverride` check was nested inside the `p2stateno == -1` branch, so a throw's `p2stateno` redirect bypassed HitOverride entirely. Fixed by checking `tHasMatchingHitOverride` first, unconditionally, before the `p2stateno == -1` / `p2getp1state` / plain-`p2stateno` branches. `setPlayerHitStatesNonPlayer()` (helpers/projectiles) was already correct and untouched — note it doesn't handle `p2stateno` for helpers at all, a possible separate gap, not investigated. **Source-traced only — this is the newest fix, not built or run at all yet. Test specifically: an armor/counter character with a HitOverride against a throw-type attack.** |
 
 **None of the above has ever been built and tested all together in one pass.** Do that before
 trusting any of it further, per the checklist in Section 3.
@@ -156,10 +157,9 @@ trusting any of it further, per the checklist in Section 3.
 
 1. **Build and run the full regression checklist in Section 3.** Nothing below this matters if
    the current fixes haven't actually been verified to work (and not break other things) together.
-2. **HitOverride + p2stateno logic wrong** — armor characters may get thrown instead of the
-   HitOverride taking priority. Not investigated yet. Start at `hasMatchingHitOverride`
-   (`playerdefinition.cpp`, used in the hit-apply path) and cross-reference against how a
-   `p2stateno` redirect should interact with an active HitOverride.
+2. ~~HitOverride + p2stateno logic wrong~~ — **Fixed in source this session, see Section 5. Not yet
+   built or tested — verifying this (armor/counter character with a HitOverride vs. a throw) should
+   be part of the Section 3 regression pass, not a separate task.**
 3. **OOB read after animation end** — `mStep` can grow past the animation's step-vector size.
    Likely lives in the same area as the animation-time code (`loadNextStepAndReturnIfShouldBeRemoved`
    in `mugenanimationhandler.cpp`) — worth investigating together with #4 below since they're
