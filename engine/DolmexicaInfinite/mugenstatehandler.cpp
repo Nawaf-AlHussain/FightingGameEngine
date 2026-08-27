@@ -426,6 +426,19 @@ void changeDreamHandledStateMachineState(RegisteredMugenStateMachine* e, int tNe
                 e->mCurrentJugglePoints = evaluateDreamAssignmentAndReturnAsInteger(&newState->mJuggleRequired, e->mPlayer);
         }
 
+        // facep2: parsed (mDoesFacePlayer2 / MUGEN_STATE_PROPERTY_FACE_PLAYER_2_INFO) since at
+        // least the mugenstatereader.cpp parser existed, but never consumed anywhere - every
+        // other statedef-level property (velset, ctrl, poweradd, juggle, anim, sprpriority, the
+        // three persistence flags) gets applied here on state entry, this one didn't. Reuses the
+        // same turnPlayerTowardsOtherPlayer() already used by updateAutoTurn() and the round-win
+        // pose in gamelogic.cpp, rather than duplicating turn logic.
+        if (hasPrismFlag(newState->mFlags, MUGEN_STATE_PROPERTY_FACE_PLAYER_2_INFO)) {
+                int facePlayer2 = evaluateDreamAssignmentAndReturnAsInteger(&newState->mDoesFacePlayer2, e->mPlayer);
+                if (facePlayer2) {
+                        turnPlayerTowardsOtherPlayer(e->mPlayer);
+                }
+        }
+
         if (hasPrismFlag(newState->mFlags, MUGEN_STATE_PROPERTY_CHANGING_SPRITE_PRIORITY)) {
                 int spritePriority = evaluateDreamAssignmentAndReturnAsInteger(&newState->mSpritePriority, e->mPlayer);
                 setPlayerSpritePriority(e->mPlayer, spritePriority);
