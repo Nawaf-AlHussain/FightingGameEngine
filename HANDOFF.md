@@ -55,15 +55,14 @@ engine. **Every C++ source change in this repo is inert on the live site until s
 rebuilds the WASM and commits the new binaries.** Check `public/game/build-version.json` after any
 deploy to confirm what's actually live: `curl https://fighting-game-engine.vercel.app/game/build-version.json`.
 
-**Also don't assume a push = a live deploy.** As of this writing, the repo's latest commit
-(`556e737`) has build `dev-1787656270` in `public/game/build-version.json`, but the actual live
-site at `fighting-game-engine.vercel.app/game/build-version.json` was still serving
-`dev-1787635702` (an *older* build, several commits back — still has the `GL_CONSTANT_ALPHA`
-black-rectangle bug this repo has since fixed). Whoever picks this up next: check the live
-`build-version.json` against the repo's before trusting that anything described as "fixed" here is
-actually what a user testing the live site will see, and check the Vercel dashboard/deploy logs if
-they don't match — this needs a human with Vercel access to investigate, it's not something fixable
-from source.
+**Don't assume a push = an immediate live deploy — but it does catch up.** Earlier in this
+project's history, the live site lagged the repo's latest build by several commits for a while
+(still serving an old build with the `GL_CONSTANT_ALPHA` black-rectangle bug after it had been
+fixed in source). As of this writing that's resolved — live `build-version.json`
+(`fighting-game-engine.vercel.app/game/build-version.json`) matches the repo's exactly
+(`dev-1787929133`, same `wasmSha256`), confirming **all 9 fixes below (items 64-72 in `TODO.md`)
+are now actually running on the live site**, not just sitting in source. Still worth re-checking
+this after any future push, in case the lag recurs — it's cheap to check and expensive to assume.
 
 ---
 
@@ -167,8 +166,15 @@ trusting any of it further, per the checklist in Section 3.
 
 ## 6. WHAT'S NEXT, IN PRIORITY ORDER
 
-1. **Build and run the full regression checklist in Section 3.** Nothing below this matters if
-   the current fixes haven't actually been verified to work (and not break other things) together.
+1. **Build and run the full regression checklist in Section 3 — this is now actually possible for
+   the first time.** All 9 source fixes (items 64-72 in `TODO.md`) are confirmed live on the
+   deployed site as of this writing (`build-version.json` on `fighting-game-engine.vercel.app`
+   matches the repo's `dev-1787929133` build exactly). Every fix up to this point has been
+   "source-traced only, never visually verified" — that caveat can finally be retired, but only
+   once someone actually plays the game and runs the checklist. This is squarely a job for a human
+   playtester, not something further source-reading accomplishes. If you're an agent reading this
+   and you don't have a way to actually play the game yourself, say so explicitly and ask the user
+   to run the checklist, rather than silently skipping it.
 2. ~~HitOverride + p2stateno logic wrong~~ — **Fixed in source this session, see Section 5. Not yet
    built or tested — verifying this (armor/counter character with a HitOverride vs. a throw) should
    be part of the Section 3 regression pass, not a separate task.**
