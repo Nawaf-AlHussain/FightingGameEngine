@@ -619,11 +619,12 @@ static AssignmentReturnValue* playerIDFunction(DreamMugenAssignment** tIndexAssi
 static DreamPlayer* getRegularPlayerFromFirstVectorPartOrNullIfNonexistant(DreamMugenAssignment** a, DreamPlayer* tPlayer, int* tIsStatic) {
         static const size_t PLAYER_TEXT_BUFFER_SIZE = 100;
         char text[PLAYER_TEXT_BUFFER_SIZE];
+        text[0] = '\0'; // Initialize to empty string — prevents UB from strlen on uninitialized buffer
         int id = -1;
         if ((*a)->mType == MUGEN_ASSIGNMENT_TYPE_RAW_VARIABLE)
         {
                 auto rawVar = (DreamMugenRawVariableAssignment*)(*a);
-                if (strlen(text) >= PLAYER_TEXT_BUFFER_SIZE) return NULL;
+                if (strlen(rawVar->mName) >= PLAYER_TEXT_BUFFER_SIZE) return NULL;
                 strcpy(text, rawVar->mName);
         }
         else if ((*a)->mType == MUGEN_ASSIGNMENT_TYPE_ARRAY) {
@@ -712,11 +713,12 @@ static AssignmentReturnValue* helperStoryFunction(DreamMugenAssignment** /*tInde
 static DreamPlayer* getStoryPlayerFromFirstVectorPartOrNullIfNonexistant(DreamMugenAssignment** a, DreamPlayer* tPlayer, int* tIsStatic) {
         static const size_t PLAYER_TEXT_BUFFER_SIZE = 100;
         char text[PLAYER_TEXT_BUFFER_SIZE];
+        text[0] = '\0'; // Initialize to empty string — prevents UB from strlen on uninitialized buffer
         int id = -1;
         if ((*a)->mType == MUGEN_ASSIGNMENT_TYPE_RAW_VARIABLE)
         {
                 auto rawVar = (DreamMugenRawVariableAssignment*)(*a);
-                if (strlen(text) >= PLAYER_TEXT_BUFFER_SIZE) return NULL;
+                if (strlen(rawVar->mName) >= PLAYER_TEXT_BUFFER_SIZE) return NULL;
                 strcpy(text, rawVar->mName);
         }
         else if ((*a)->mType == MUGEN_ASSIGNMENT_TYPE_ARRAY) {
@@ -1983,7 +1985,7 @@ static AssignmentReturnValue* getHitVarFallEnvshakeTimeFunction(DreamPlayer* tPl
 static AssignmentReturnValue* getHitVarFallEnvshakeFreqFunction(DreamPlayer* tPlayer) { return makeFloatAssignmentReturn(getActiveHitDataFallEnvironmentShakeFrequency(tPlayer)); }
 static AssignmentReturnValue* getHitVarFallEnvshakeAmplFunction(DreamPlayer* tPlayer) { return makeNumberAssignmentReturn(getActiveHitDataFallEnvironmentShakeAmplitude(tPlayer)); }
 static AssignmentReturnValue* getHitVarFallEnvshakePhaseFunction(DreamPlayer* tPlayer) { return makeFloatAssignmentReturn(getActiveHitDataFallEnvironmentShakePhase(tPlayer)); }
-static AssignmentReturnValue* getHitVarSlidetimeFunction(DreamPlayer* tPlayer) {        return makeBooleanAssignmentReturn(getPlayerSlideTime(tPlayer));}
+static AssignmentReturnValue* getHitVarSlidetimeFunction(DreamPlayer* tPlayer) {        return makeNumberAssignmentReturn(getPlayerSlideTime(tPlayer));}
 static AssignmentReturnValue* getHitVarHitshaketimeFunction(DreamPlayer* tPlayer) { return makeNumberAssignmentReturn(getActiveHitDataPlayerHitShakeTime(tPlayer)); }
 static AssignmentReturnValue* getHitVarHitTimeFunction(DreamPlayer* tPlayer) { return makeNumberAssignmentReturn(getPlayerHitTime(tPlayer));}
 static AssignmentReturnValue* getHitVarHitcountFunction(DreamPlayer* tPlayer) { return makeNumberAssignmentReturn(getPlayerHitCount(tPlayer));}
@@ -2735,14 +2737,42 @@ static AssignmentReturnValue* ceilFunction(DreamMugenAssignment** tIndexAssignme
 static AssignmentReturnValue* animElemTimeFunction(DreamMugenAssignment** tIndexAssignment, DreamPlayer* tPlayer, int* tIsStatic) { return evaluateAnimationElementTimeArrayAssignment(evaluateAssignmentDependency(tIndexAssignment, tPlayer, tIsStatic), tPlayer, tIsStatic); }
 static AssignmentReturnValue* animElemNoFunction(DreamMugenAssignment** tIndexAssignment, DreamPlayer* tPlayer, int* tIsStatic) { return evaluateAnimationElementNumberArrayAssignment(evaluateAssignmentDependency(tIndexAssignment, tPlayer, tIsStatic), tPlayer, tIsStatic); }
 static AssignmentReturnValue* ifElseFunction(DreamMugenAssignment** tIndexAssignment, DreamPlayer* tPlayer, int* tIsStatic) {
-        // IfElse(cond, a, b) is semantically identical to Cond(cond, a, b).
-        // The legacy IfElse implementation (evaluateIfElseArrayAssignment) used
-        // sscanf on a flattened string of the arguments, which fails for any
-        // non-trivial expression (e.g. IfElse(AILevel>0, var(5):=1, var(5):=0)).
-        // Delegating to the proper Cond implementation (which walks the parsed
-        // AST tree) makes IfElse work for all modern MUGEN characters that use
-        // either spelling.
-        return evaluateCondArrayAssignment(tIndexAssignment, tPlayer, tIsStatic);
+        // MUGEN 1.1 spec: IfElse(cond, a, b) evaluates the condition AND BOTH
+        // branches. The unused branch's side effects (e.g. := assignments)
+        // still occur, but its return value is discarded. This is different
+        // from Cond(cond, a, b) which only evaluates the taken branch.
+        if ((*tIndexAssignment)->mType != MUGEN_ASSIGNMENT_TYPE_VECTOR) {
+                logWarningFormat("Invalid ifelse array cond vector type %d. Defaulting to bottom.", (*tIndexAssignment)->mType);
+                return makeBottomAssignmentReturn();
+        }
+        DreamMugenDependOnTwoAssignment* firstV = (DreamMugenDependOnTwoAssignment*)*tIndexAssignment;
+        if(firstV->b->mType != MUGEN_ASSIGNMENT_TYPE_VECTOR) {
+                logWarningFormat("Invalid ifelse array second vector type %d. Defaulting to bottom.", firstV->b->mType);
+                return makeBottomAssignmentReturn();
+        }
+        DreamMugenDependOnTwoAssignment* secondV = (DreamMugenDependOnTwoAssignment*)firstV->b;
+
+        AssignmentReturnValue* truthValue = evaluateAssignmentDependency(&firstV->a, tPlayer, tIsStatic);
+        int isTrue = convertAssignmentReturnToNumber(truthValue);
+        destroyAssignmentReturn(truthValue);
+
+        // Evaluate BOTH branches — IfElse spec requires both to be evaluated
+        // for side effects, even though only the taken branch's value is returned.
+        AssignmentReturnValue* yesRet = evaluateAssignmentDependency(&secondV->a, tPlayer, tIsStatic);
+        AssignmentReturnValue* noRet = evaluateAssignmentDependency(&secondV->b, tPlayer, tIsStatic);
+
+        AssignmentReturnValue* ret;
+        if (isTrue) {
+                ret = yesRet;
+                destroyAssignmentReturn(noRet);
+        }
+        else {
+                ret = noRet;
+                destroyAssignmentReturn(yesRet);
+        }
+
+        *tIsStatic = 0;
+        return ret;
 }
 static AssignmentReturnValue* condFunction(DreamMugenAssignment** tIndexAssignment, DreamPlayer* tPlayer, int* tIsStatic) { return evaluateCondArrayAssignment(tIndexAssignment, tPlayer, tIsStatic); }
 static AssignmentReturnValue* animExistFunction(DreamMugenAssignment** tIndexAssignment, DreamPlayer* tPlayer, int* tIsStatic) { return evaluateAnimationExistArrayAssignment(evaluateAssignmentDependency(tIndexAssignment, tPlayer, tIsStatic), tPlayer, tIsStatic); }
