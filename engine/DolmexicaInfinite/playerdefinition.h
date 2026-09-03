@@ -832,6 +832,7 @@ void setPlayerDoesScaleProjectiles(DreamPlayer* p, int tDoesScaleProjectiles);
 
 DreamPlayer* clonePlayerAsHelper(DreamPlayer* p);
 int destroyPlayer(DreamPlayer* tPlayer);
+void removePlayerHelpersRecursive(DreamPlayer* p);
 int getPlayerID(DreamPlayer* p);
 void setPlayerID(DreamPlayer* p, int tID);
 void setPlayerHelperControl(DreamPlayer* p, int tCanControl);

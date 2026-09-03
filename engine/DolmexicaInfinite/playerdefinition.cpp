@@ -637,6 +637,13 @@ static void removePlayerHelpers(DreamPlayer* p) {
         list_map(&p->mHelpers, removeSingleHelperCB, NULL);
 }
 
+// Public wrapper for DestroySelf recursive=1 — destroys all descendant
+// helpers recursively. Each child's destroyPlayer call will in turn
+// destroy its own children (via removeSingleHelperCB).
+void removePlayerHelpersRecursive(DreamPlayer* p) {
+        removePlayerHelpers(p);
+}
+
 static void resetPlayerVariables(DreamPlayer* p) {
         for (int i = 0; i < getPlayerDataIntPersistIndex(p); i++) {
                 setPlayerVariable(p, i, 0);

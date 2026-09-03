@@ -4670,8 +4670,29 @@ static int handleHelper(DreamMugenStateController* tController, DreamPlayer* tPl
         return 0;
 }
 
-static int handleDestroySelf(DreamPlayer* tPlayer) {
-        logFormat("%d %d destroying self\n", tPlayer->mRootID, tPlayer->mID);
+static int handleDestroySelf(DreamMugenStateController* tController, DreamPlayer* tPlayer) {
+        DestroySelfController* e = (DestroySelfController*)tController->mData;
+
+        int recursive = 0;
+        int removeExplods = 0;
+        evaluateDreamAssignmentAndReturnAsOneIntegerWithDefaultValue(&e->mRecursive, tPlayer, &recursive, 0);
+        evaluateDreamAssignmentAndReturnAsOneIntegerWithDefaultValue(&e->mRemoveExplods, tPlayer, &removeExplods, 0);
+
+        logFormat("%d %d destroying self (recursive=%d, removeexplods=%d)\n", tPlayer->mRootID, tPlayer->mID, recursive, removeExplods);
+
+        if (recursive) {
+                // MUGEN 1.1: recursive=1 destroys all descendant helpers too.
+                // removePlayerHelpers destroys all children; each child's
+                // destroyPlayer call will in turn destroy its own children.
+                removePlayerHelpersRecursive(tPlayer);
+        }
+
+        if (removeExplods) {
+                // MUGEN 1.1: removeexplods=1 removes explods belonging to the helper.
+                // With recursive, descendants' explods are already removed above.
+                removeAllExplodsForPlayer(tPlayer);
+        }
+
         return destroyPlayer(tPlayer);
 }
 
@@ -5662,7 +5683,7 @@ int createHelperStoryHandleFunction(DreamMugenStateController* tController, Drea
 int createTextStoryHandleFunction(DreamMugenStateController* tController, DreamPlayer* tPlayer);
 int ctrlSetHandleFunction(DreamMugenStateController* tController, DreamPlayer* tPlayer) { return handleControlSetting(tController, tPlayer); }
 int defenceMulSetHandleFunction(DreamMugenStateController* tController, DreamPlayer* tPlayer) { return handleDefenseMultiplier(tController, tPlayer); }
-int destroySelfHandleFunction(DreamMugenStateController* /*tController*/, DreamPlayer* tPlayer) { return handleDestroySelf(tPlayer); }
+int destroySelfHandleFunction(DreamMugenStateController* tController, DreamPlayer* tPlayer) { return handleDestroySelf(tController, tPlayer); }
 int displayToClipboardHandleFunction(DreamMugenStateController* tController, DreamPlayer* tPlayer) { return handleDisplayToClipboardController(tController, tPlayer); }
 int envColorHandleFunction(DreamMugenStateController* tController, DreamPlayer* tPlayer) { return handleEnvironmentColorController(tController, tPlayer); }
 int envShakeHandleFunction(DreamMugenStateController* tController, DreamPlayer* tPlayer) { return handleEnvironmentShakeController(tController, tPlayer); }
