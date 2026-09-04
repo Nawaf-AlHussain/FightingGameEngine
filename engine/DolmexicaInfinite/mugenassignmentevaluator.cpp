@@ -623,7 +623,12 @@ static DreamPlayer* getRegularPlayerFromFirstVectorPartOrNullIfNonexistant(Dream
         if ((*a)->mType == MUGEN_ASSIGNMENT_TYPE_RAW_VARIABLE)
         {
                 auto rawVar = (DreamMugenRawVariableAssignment*)(*a);
-                if (strlen(text) >= PLAYER_TEXT_BUFFER_SIZE) return NULL;
+                // Was checking strlen(text) here - text is an uninitialized stack buffer at this
+                // point (nothing has written to it yet), so this read undefined memory and
+                // provided no actual overflow protection. The intent is clearly to bounds-check
+                // the source string (rawVar->mName) before strcpy-ing it into the fixed-size
+                // buffer below.
+                if (strlen(rawVar->mName) >= PLAYER_TEXT_BUFFER_SIZE) return NULL;
                 strcpy(text, rawVar->mName);
         }
         else if ((*a)->mType == MUGEN_ASSIGNMENT_TYPE_ARRAY) {
@@ -716,7 +721,10 @@ static DreamPlayer* getStoryPlayerFromFirstVectorPartOrNullIfNonexistant(DreamMu
         if ((*a)->mType == MUGEN_ASSIGNMENT_TYPE_RAW_VARIABLE)
         {
                 auto rawVar = (DreamMugenRawVariableAssignment*)(*a);
-                if (strlen(text) >= PLAYER_TEXT_BUFFER_SIZE) return NULL;
+                // Same fix as getRegularPlayerFromFirstVectorPartOrNullIfNonexistant() above -
+                // was reading strlen() of the uninitialized destination buffer instead of the
+                // source string, before the source had been copied into it.
+                if (strlen(rawVar->mName) >= PLAYER_TEXT_BUFFER_SIZE) return NULL;
                 strcpy(text, rawVar->mName);
         }
         else if ((*a)->mType == MUGEN_ASSIGNMENT_TYPE_ARRAY) {
