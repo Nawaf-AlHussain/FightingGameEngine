@@ -73,6 +73,10 @@ typedef struct {
         double mTimeDilatationNow;
         double mTimeDilatation;
         int mNow;
+
+        int mIsOrphaned;
+        int mOwnerRootID;
+        int mOwnerShadowOffsetY;
 } Explod;
 
 
@@ -99,6 +103,9 @@ int addExplod(DreamPlayer* tPlayer)
         e.mRemoveTime = -2;
         e.mPlayer = tPlayer;
         e.mInternalID = id;
+        e.mIsOrphaned = 0;
+        e.mOwnerRootID = 0;
+        e.mOwnerShadowOffsetY = 0;
         return e.mInternalID;
 }
 
@@ -321,9 +328,10 @@ static Position2D getFinalExplodPositionFromPositionType(DreamExplodPositionType
 
 static Position getExplodPosition(Explod* e) {
         Position2D p;
+        const DreamExplodPositionType posType = e->mIsOrphaned ? EXPLOD_POSITION_TYPE_NONE : e->mPositionType;
         switch (e->mSpace) {
         case EXPLOD_SPACE_NONE:
-                p = getDreamStageCoordinateSystemOffset(getDreamMugenStageHandlerCameraCoordinateP()) + getFinalExplodPositionFromPositionType(e->mPositionType, e->mPosition, e->mPlayer);
+                p = getDreamStageCoordinateSystemOffset(getDreamMugenStageHandlerCameraCoordinateP()) + getFinalExplodPositionFromPositionType(posType, e->mPosition, e->mPlayer);
                 break;
         case EXPLOD_SPACE_STAGE:
                 p = getDreamStageCoordinateSystemOffset(getDreamMugenStageHandlerCameraCoordinateP()) + getFinalExplodPositionFromPositionType(EXPLOD_POSITION_TYPE_NONE, e->mPosition, e->mPlayer);
@@ -337,7 +345,8 @@ static Position getExplodPosition(Explod* e) {
                 break;
         }
         p = p + e->mRandomOffset;
-        return p.xyz(calculateSpriteZFromSpritePriority(e->mSpritePriority, e->mPlayer->mRootID, 1));
+        const int rootID = e->mIsOrphaned ? e->mOwnerRootID : e->mPlayer->mRootID;
+        return p.xyz(calculateSpriteZFromSpritePriority(e->mSpritePriority, rootID, 1));
 }
 
 static void getExplodSpritesAnimationsScale(Explod* e, MugenSpriteFile** tSprites, MugenAnimation** tAnimation, double* tBaseScale) {
@@ -413,7 +422,8 @@ static void updateActiveExplodShadow(Explod* e) {
         const auto screenPositionY = noCameraPosY - getDreamMugenStageHandlerCameraPositionReference()->y;
         auto deltaY = noCameraPosY - stageOffset.y;
         deltaY *= -getDreamStageShadowScaleY();
-        deltaY += getPlayerShadowOffset(e->mPlayer, getDreamMugenStageHandlerCameraCoordinateP());
+        const int shadowOffsetY = e->mIsOrphaned ? e->mOwnerShadowOffsetY : getPlayerShadowOffset(e->mPlayer, getDreamMugenStageHandlerCameraCoordinateP());
+        deltaY += shadowOffsetY;
         const auto newShadowAnimationPosition = Vector3D(explodAnimationPosition.x, stageOffset.y + deltaY - physicsPosition, EXPLOD_SHADOW_Z);
         setMugenAnimationPosition(e->mShadowAnimationElement, newShadowAnimationPosition);
         const auto posY = -(getDreamScreenHeight(getDreamMugenStageHandlerCameraCoordinateP()) - screenPositionY);
@@ -464,6 +474,8 @@ void finalizeExplod(int tID)
         setMugenAnimationDrawScale(e->mShadowAnimationElement, Vector2D(1, -getDreamStageShadowScaleY()) * e->mScale);
         setMugenAnimationBaseDrawScale(e->mAnimationElement, baseScale);
         setMugenAnimationBaseDrawScale(e->mShadowAnimationElement, baseScale);
+        e->mOwnerRootID = e->mPlayer->mRootID;
+        e->mOwnerShadowOffsetY = getPlayerShadowOffset(e->mPlayer, getDreamMugenStageHandlerCameraCoordinateP());
         if (e->mHasTransparencyType) {
                 setMugenAnimationBlendType(e->mAnimationElement, e->mTransparencyType == EXPLOD_TRANSPARENCY_TYPE_ADD_ALPHA ? BLEND_TYPE_ADDITION : BLEND_TYPE_NORMAL);
         }
@@ -1007,6 +1019,18 @@ void removeAllExplodsForPlayer(DreamPlayer* tPlayer)
         stl_int_map_remove_predicate(gMugenExplod.mExplods, removeSingleExplod, &caller);
 }
 
+static void orphanSingleExplod(DreamPlayer* tOldOwner, Explod& tData) {
+        Explod* e = &tData;
+        if (e->mPlayer == tOldOwner) {
+                e->mIsOrphaned = 1;
+                e->mPlayer = nullptr;
+        }
+}
+
+void orphanExplodsForPlayer(DreamPlayer* tOldOwner) {
+        stl_int_map_map(gMugenExplod.mExplods, orphanSingleExplod, tOldOwner);
+}
+
 static int removeSingleExplodAfterHit(RemoveExplodsCaller* tCaller, Explod& tData) {
         setProfilingSectionMarkerCurrentFunction();
         Explod* e = &tData;
@@ -1222,7 +1246,7 @@ static int updateSingleExplod(void* tCaller, Explod& tData) {
         e->mTimeDilatationNow -= updateAmount;
         while (updateAmount--) {
                 updateStaticExplodPosition(e);
-                if (isPlayerHitPaused(e->mPlayer)) return 0;
+                if (e->mPlayer && isPlayerHitPaused(e->mPlayer)) return 0;
 
                 if (updateActiveExplodSuperPauseStopAndReturnIfStopped(e)) return 0;
                 if (updateActiveExplodPauseStopAndReturnIfStopped(e)) return 0;

@@ -627,21 +627,25 @@ void unloadPlayers() {
         gPlayerDefinition.mAllProjectiles.clear();
 }
 
-static void removeSingleHelperCB(void* /*tCaller*/, void* tData) {
+typedef struct {
+        int mRemoveExplods;
+} RemoveHelpersCaller;
+
+static void removeSingleHelperCB(void* tCaller, void* tData) {
+        RemoveHelpersCaller* caller = (RemoveHelpersCaller*)tCaller;
         DreamPlayer* p = (DreamPlayer*)tData;
-        list_map(&p->mHelpers, removeSingleHelperCB, NULL);
-        destroyPlayer(p);
+        list_map(&p->mHelpers, removeSingleHelperCB, caller);
+        destroyPlayerWithFlags(p, caller ? caller->mRemoveExplods : 1);
 }
 
-static void removePlayerHelpers(DreamPlayer* p) {
-        list_map(&p->mHelpers, removeSingleHelperCB, NULL);
+static void removePlayerHelpers(DreamPlayer* p, int tRemoveExplods) {
+        RemoveHelpersCaller caller;
+        caller.mRemoveExplods = tRemoveExplods;
+        list_map(&p->mHelpers, removeSingleHelperCB, &caller);
 }
 
-// Public wrapper for DestroySelf recursive=1 — destroys all descendant
-// helpers recursively. Each child's destroyPlayer call will in turn
-// destroy its own children (via removeSingleHelperCB).
-void removePlayerHelpersRecursive(DreamPlayer* p) {
-        removePlayerHelpers(p);
+void removePlayerHelpersRecursive(DreamPlayer* p, int tRemoveExplods) {
+        removePlayerHelpers(p, tRemoveExplods);
 }
 
 static void resetPlayerVariables(DreamPlayer* p) {
@@ -672,7 +676,7 @@ static void resetSinglePlayer(DreamPlayer* p) {
                 setPlayerFaceDirection(p, FACE_DIRECTION_RIGHT);
         }
 
-        removePlayerHelpers(p);
+        removePlayerHelpers(p, 1);
         resetPlayerVariables(p);
 }
 
@@ -1868,7 +1872,14 @@ static void setPlayerHitPosition(DreamPlayer* p, DreamPlayer* tAttackingPlayer) 
 static void setPlayerHitPaletteEffects(DreamPlayer* p) {
         const auto duration = getActiveHitDataPaletteEffectTime(p);
         if (!duration) return;
-        setPlayerPaletteEffect(p, duration, getActiveHitDataPaletteEffectAddition(p), getActiveHitDataPaletteEffectMultiplication(p), Vector3D(0, 0, 0), 1, 0, 1.0, 0);
+        setPlayerPaletteEffect(p, duration,
+                getActiveHitDataPaletteEffectAddition(p),
+                getActiveHitDataPaletteEffectMultiplication(p),
+                getActiveHitDataPaletteEffectSineAmplitude(p),
+                getActiveHitDataPaletteEffectSinePeriod(p),
+                getActiveHitDataPaletteEffectInvertAll(p),
+                getActiveHitDataPaletteEffectColorFactor(p),
+                0);
 }
 
 static void setPlayerHit(DreamPlayer* p, DreamPlayer* tOtherPlayer, void* tHitData) {
@@ -2174,11 +2185,11 @@ static void handleReversalDefHit(DreamPlayer* p, DreamPlayer* tOtherPlayer) {
         playPlayerHitSpark(p, tOtherPlayer, p, isReversalDefSparkInPlayerFile(p), getReversalDefSparkNumber(p), getActiveHitDataSparkXY(p) + getReversalDefSparkXY(p));
         addPlayerAsActiveTarget(p, tOtherPlayer);
 
-        // ReversalDef accepts damage/getpower/givepower same as HitDef (per MUGEN spec); this was
-        // previously entirely unparsed and unapplied, so a landed reversal could never grant
-        // power no matter what a character's CNS specified. Not applying damage here - real
-        // MUGEN's ReversalDef defaults Damage=0,0 (a reversal resets the opponent's state, it
-        // doesn't inherently deal damage), and the reported bug was specifically about power.
+        // PROJECT-SPECIFIC EXTENSION (NOT MUGEN 1.1 SPEC):
+        // ReversalDef does NOT officially support getpower/givepower in MUGEN 1.1.
+        // This power-gain behavior was added for backward compatibility with
+        // characters that rely on it. Per official spec, ReversalDef supports ONLY:
+        // reversal.attr, pausetime, sparkno, hitsound, p1stateno, p2stateno, sparkxy.
         addPlayerPower(getPlayerRoot(p), getReversalDefGetPower(p));
         addPlayerPower(getPlayerRoot(tOtherPlayer), getReversalDefGivePower(p));
 
@@ -4923,7 +4934,6 @@ static void removePlayerBoundHelpers(DreamPlayer* p) {
 }
 
 static void destroyGeneralPlayer(DreamPlayer* p) {
-        removeAllExplodsForPlayer(p);
         removePlayerAfterImage(p);
         removeMugenAnimation(p->mAnimationElement);
         removeMugenAnimation(p->mShadow.mAnimationElement);
@@ -4933,7 +4943,7 @@ static void destroyGeneralPlayer(DreamPlayer* p) {
         p->mIsDestroyed = 1;
 }
 
-int destroyPlayer(DreamPlayer* p)
+int destroyPlayerWithFlags(DreamPlayer* p, int tRemoveExplods)
 {
         if (!p->mIsHelper) {
                 logWarningFormat("Warning: trying to destroy player %d %d who is not a helper. Ignoring.\n", p->mRootID, p->mID);
@@ -4948,7 +4958,13 @@ int destroyPlayer(DreamPlayer* p)
         assert(p->mParent);
         assert(p->mHelperIDInParent != -1);
 
-        logFormat("destroy %d %d\n", p->mRootID, p->mID);
+        logFormat("destroy %d %d (removeExplods=%d)\n", p->mRootID, p->mID, tRemoveExplods);
+
+        if (tRemoveExplods) {
+                removeAllExplodsForPlayer(p);
+        } else {
+                orphanExplodsForPlayer(p);
+        }
 
         list_remove(&gPlayerDefinition.mAllPlayers, p->mHelperIDInRoot);
         removePlayerBoundHelpers(p);
@@ -4956,6 +4972,11 @@ int destroyPlayer(DreamPlayer* p)
         movePlayerHelpersToParent(p);
         destroyGeneralPlayer(p);
         return 1;
+}
+
+int destroyPlayer(DreamPlayer* p)
+{
+        return destroyPlayerWithFlags(p, 1);
 }
 
 int getPlayerID(DreamPlayer* p)

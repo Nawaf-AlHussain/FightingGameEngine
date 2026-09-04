@@ -78,6 +78,7 @@ void updateExplodTransparencyType(DreamPlayer* tPlayer, int tID, DreamExplodTran
 
 void removeExplodsWithID(DreamPlayer* tPlayer, int tExplodID);
 void removeAllExplodsForPlayer(DreamPlayer* tPlayer);
+void orphanExplodsForPlayer(DreamPlayer* tOldOwner);
 void removeExplodsForPlayerAfterHit(DreamPlayer* tPlayer);
 void removeAllExplods();
 int getExplodIndexFromExplodID(DreamPlayer* tPlayer, int tExplodID);

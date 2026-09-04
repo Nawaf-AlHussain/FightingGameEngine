@@ -225,7 +225,7 @@ namespace prism {
 
 		e->mScaleX = vectorElement->mVector.mSize >= 8 ? atof(vectorElement->mVector.mElement[7]) : 1.0;
 		e->mScaleY = vectorElement->mVector.mSize >= 9 ? atof(vectorElement->mVector.mElement[8]) : 1.0;
-		e->mAngleRad = vectorElement->mVector.mSize >= 10 ? degreesToRadians(double(atoi(vectorElement->mVector.mElement[9]))) : 0.0;
+		e->mAngleRad = vectorElement->mVector.mSize >= 10 ? degreesToRadians(atof(vectorElement->mVector.mElement[9])) : 0.0;
 
 		e->mInterpolateOffset = 0;
 		e->mInterpolateBlend = 0;

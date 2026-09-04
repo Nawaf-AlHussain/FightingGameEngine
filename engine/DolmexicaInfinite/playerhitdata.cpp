@@ -1483,6 +1483,62 @@ void setHitDataPaletteEffectAddition(DreamPlayer* tPlayer, int tR, int tG, int t
         e->mPaletteEffectAddition = Vector3DI(tR, tG, tB) / 256.0;
 }
 
+Vector3D getActiveHitDataPaletteEffectSineAmplitude(DreamPlayer* tPlayer)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mActiveHitData;
+        return e->mPaletteEffectSineAmplitude;
+}
+
+void setHitDataPaletteEffectSineAmplitude(DreamPlayer* tPlayer, int tR, int tG, int tB)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mPassiveHitData;
+        e->mPaletteEffectSineAmplitude = Vector3DI(tR, tG, tB) / 256.0;
+}
+
+int getActiveHitDataPaletteEffectSinePeriod(DreamPlayer* tPlayer)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mActiveHitData;
+        return e->mPaletteEffectSinePeriod;
+}
+
+void setHitDataPaletteEffectSinePeriod(DreamPlayer* tPlayer, int tPeriod)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mPassiveHitData;
+        e->mPaletteEffectSinePeriod = tPeriod;
+}
+
+int getActiveHitDataPaletteEffectInvertAll(DreamPlayer* tPlayer)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mActiveHitData;
+        return e->mPaletteEffectInvertAll;
+}
+
+void setHitDataPaletteEffectInvertAll(DreamPlayer* tPlayer, int tInvertAll)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mPassiveHitData;
+        e->mPaletteEffectInvertAll = tInvertAll;
+}
+
+double getActiveHitDataPaletteEffectColorFactor(DreamPlayer* tPlayer)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mActiveHitData;
+        return e->mPaletteEffectColorFactor;
+}
+
+void setHitDataPaletteEffectColorFactor(DreamPlayer* tPlayer, double tColorFactor)
+{
+        assert(isGeneralPlayer(tPlayer));
+        PlayerHitData* e = &tPlayer->mPassiveHitData;
+        e->mPaletteEffectColorFactor = tColorFactor;
+}
+
 int getActiveHitDataEnvironmentShakeTime(DreamPlayer* tPlayer)
 {
         assert(isGeneralPlayer(tPlayer));

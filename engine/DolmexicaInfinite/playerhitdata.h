@@ -228,6 +228,10 @@ typedef struct {
         int mPaletteEffectTime;
         Vector3D mPaletteEffectMultiplication;
         Vector3D mPaletteEffectAddition;
+        Vector3D mPaletteEffectSineAmplitude;
+        int mPaletteEffectSinePeriod;
+        int mPaletteEffectInvertAll;
+        double mPaletteEffectColorFactor;
 
         int mEnvironmentShakeTime;
         double mEnvironmentShakeFrequency;
@@ -497,6 +501,14 @@ Vector3D getActiveHitDataPaletteEffectMultiplication(DreamPlayer* tPlayer);
 void setHitDataPaletteEffectMultiplication(DreamPlayer* tPlayer, int tR, int tG, int tB);
 Vector3D getActiveHitDataPaletteEffectAddition(DreamPlayer* tPlayer);
 void setHitDataPaletteEffectAddition(DreamPlayer* tPlayer, int tR, int tG, int tB);
+Vector3D getActiveHitDataPaletteEffectSineAmplitude(DreamPlayer* tPlayer);
+void setHitDataPaletteEffectSineAmplitude(DreamPlayer* tPlayer, int tR, int tG, int tB);
+int getActiveHitDataPaletteEffectSinePeriod(DreamPlayer* tPlayer);
+void setHitDataPaletteEffectSinePeriod(DreamPlayer* tPlayer, int tPeriod);
+int getActiveHitDataPaletteEffectInvertAll(DreamPlayer* tPlayer);
+void setHitDataPaletteEffectInvertAll(DreamPlayer* tPlayer, int tInvertAll);
+double getActiveHitDataPaletteEffectColorFactor(DreamPlayer* tPlayer);
+void setHitDataPaletteEffectColorFactor(DreamPlayer* tPlayer, double tColorFactor);
 
 int getActiveHitDataEnvironmentShakeTime(DreamPlayer* tPlayer);
 void setHitDataEnvironmentShakeTime(DreamPlayer* tPlayer, int tTime);

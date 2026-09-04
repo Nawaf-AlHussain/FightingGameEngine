@@ -311,6 +311,9 @@ typedef struct {
         DreamMugenAssignment* mPaletteEffectTime;
         DreamMugenAssignment* mPaletteEffectMultiplication;
         DreamMugenAssignment* mPaletteEffectAddition;
+        DreamMugenAssignment* mPaletteEffectSineAmplitude;
+        DreamMugenAssignment* mPaletteEffectInvertAll;
+        DreamMugenAssignment* mPaletteEffectColor;
 
         DreamMugenAssignment* mEnvironmentShakeTime;
         DreamMugenAssignment* mEnvironmentShakeFrequency;
@@ -402,6 +405,9 @@ static void readHitDefinitionFromGroup(HitDefinitionController* e, MugenDefScrip
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("palfx.time", tGroup, &e->mPaletteEffectTime, "0");
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("palfx.mul", tGroup, &e->mPaletteEffectMultiplication);
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("palfx.add", tGroup, &e->mPaletteEffectAddition);
+        fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("palfx.sinadd", tGroup, &e->mPaletteEffectSineAmplitude);
+        fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("palfx.invertall", tGroup, &e->mPaletteEffectInvertAll);
+        fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("palfx.color", tGroup, &e->mPaletteEffectColor);
 
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("envshake.time", tGroup, &e->mEnvironmentShakeTime);
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("envshake.freq", tGroup, &e->mEnvironmentShakeFrequency);
@@ -514,6 +520,9 @@ static void unloadHitDefinitionData(HitDefinitionController* e) {
         destroyDreamMugenAssignment(e->mPaletteEffectTime);
         destroyDreamMugenAssignment(e->mPaletteEffectMultiplication);
         destroyDreamMugenAssignment(e->mPaletteEffectAddition);
+        destroyDreamMugenAssignment(e->mPaletteEffectSineAmplitude);
+        destroyDreamMugenAssignment(e->mPaletteEffectInvertAll);
+        destroyDreamMugenAssignment(e->mPaletteEffectColor);
 
         destroyDreamMugenAssignment(e->mEnvironmentShakeTime);
         destroyDreamMugenAssignment(e->mEnvironmentShakeFrequency);
@@ -1854,11 +1863,11 @@ static void parseReversalDefinitionController(DreamMugenStateController* tContro
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("hitsound", tGroup, &e->mHitSound);
         e->mHasP1StateNo = fetchDreamAssignmentFromGroupAndReturnWhetherItExists("p1stateno", tGroup, &e->mP1StateNo);
         e->mHasP2StateNo = fetchDreamAssignmentFromGroupAndReturnWhetherItExists("p2stateno", tGroup, &e->mP2StateNo);
-        // damage/getpower/givepower: ReversalDef accepts these same as HitDef per MUGEN spec
-        // (both default to 0/0 damage -> 0 power unless the character explicitly sets them).
-        // Previously not parsed at all, so a character's ReversalDef could never grant power no
-        // matter what they wrote in their CNS - see handleReversalDefHit in playerdefinition.cpp
-        // for where these get applied.
+        // PROJECT-SPECIFIC EXTENSION (NOT MUGEN 1.1 SPEC):
+        // Per official MUGEN 1.1 docs, ReversalDef supports ONLY: reversal.attr,
+        // pausetime, sparkno, hitsound, p1stateno, p2stateno, sparkxy (offset).
+        // damage/getpower/givepower are parsed for backward compatibility but are
+        // NOT MUGEN 1.1 parameters.
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("damage", tGroup, &e->mDamage);
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("getpower", tGroup, &e->mGetPower);
         fetchAssignmentFromGroupAndReturnWhetherItExistsDefaultString("givepower", tGroup, &e->mGivePower);
@@ -3452,7 +3461,11 @@ static void handleHitDefinitionWithController(HitDefinitionController* e, DreamP
         handleHelperSetOneIntegerElement(&e->mHitID, tPlayer, tHelper, setHitDataHitID, 0);
         handleHelperSetOneIntegerElement(&e->mChainID, tPlayer, tHelper, setHitDataChainID, -1);
         handleHelperSetTwoIntegerElements(&e->mNoChainID, tPlayer, tHelper, setHitDataNoChainID, -1, -1);
-        handleHelperSetOneIntegerElement(&e->mHitOnce, tPlayer, tHelper, setHitDataHitOnce, 1);
+        // MUGEN 1.1 hitonce default: 0, except throw attrs default to 1.
+        {
+                int hitOnceDefault = (getHitDataAttackType(tHelper) == MUGEN_ATTACK_TYPE_THROW) ? 1 : 0;
+                handleHelperSetOneIntegerElement(&e->mHitOnce, tPlayer, tHelper, setHitDataHitOnce, hitOnceDefault);
+        }
 
         handleHelperSetOneIntegerElement(&e->mKill, tPlayer, tHelper, setHitDataKill, 1);
         handleHelperSetOneIntegerElement(&e->mGuardKill, tPlayer, tHelper, setHitDataGuardKill, 1);
@@ -3464,6 +3477,18 @@ static void handleHitDefinitionWithController(HitDefinitionController* e, DreamP
         handleHelperSetOneIntegerElement(&e->mPaletteEffectTime, tPlayer, tHelper, setHitDataPaletteEffectTime, 0);
         handleHelperSetThreeIntegerElements(&e->mPaletteEffectMultiplication, tPlayer, tHelper, setHitDataPaletteEffectMultiplication, 256, 256, 256);
         handleHelperSetThreeIntegerElements(&e->mPaletteEffectAddition, tPlayer, tHelper, setHitDataPaletteEffectAddition, 0, 0, 0);
+        {
+                int sinR, sinG, sinB, sinPeriod;
+                evaluateDreamAssignmentAndReturnAsFourIntegersWithDefaultValues(&e->mPaletteEffectSineAmplitude, tPlayer, &sinR, &sinG, &sinB, &sinPeriod, 0, 0, 0, 1);
+                setHitDataPaletteEffectSineAmplitude(tHelper, sinR, sinG, sinB);
+                setHitDataPaletteEffectSinePeriod(tHelper, sinPeriod);
+        }
+        handleHelperSetOneIntegerElement(&e->mPaletteEffectInvertAll, tPlayer, tHelper, setHitDataPaletteEffectInvertAll, 0);
+        {
+                int colorInt;
+                evaluateDreamAssignmentAndReturnAsOneIntegerWithDefaultValue(&e->mPaletteEffectColor, tPlayer, &colorInt, 256);
+                setHitDataPaletteEffectColorFactor(tHelper, colorInt / 256.0);
+        }
 
         handleHelperSetOneIntegerElement(&e->mEnvironmentShakeTime, tPlayer, tHelper, setHitDataEnvironmentShakeTime, 0);
         handleHelperSetOneFloatElement(&e->mEnvironmentShakeFrequency, tPlayer, tHelper, setHitDataEnvironmentShakeFrequency, 60.0);
@@ -4681,19 +4706,10 @@ static int handleDestroySelf(DreamMugenStateController* tController, DreamPlayer
         logFormat("%d %d destroying self (recursive=%d, removeexplods=%d)\n", tPlayer->mRootID, tPlayer->mID, recursive, removeExplods);
 
         if (recursive) {
-                // MUGEN 1.1: recursive=1 destroys all descendant helpers too.
-                // removePlayerHelpers destroys all children; each child's
-                // destroyPlayer call will in turn destroy its own children.
-                removePlayerHelpersRecursive(tPlayer);
+                removePlayerHelpersRecursive(tPlayer, removeExplods);
         }
 
-        if (removeExplods) {
-                // MUGEN 1.1: removeexplods=1 removes explods belonging to the helper.
-                // With recursive, descendants' explods are already removed above.
-                removeAllExplodsForPlayer(tPlayer);
-        }
-
-        return destroyPlayer(tPlayer);
+        return destroyPlayerWithFlags(tPlayer, removeExplods);
 }
 
 static int handleAddingLife(DreamMugenStateController* tController, DreamPlayer* tPlayer) {
