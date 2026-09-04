@@ -1,0 +1,1074 @@
+; ============================================================================
+; MUGEN 1.1 Compatibility Test States
+; ============================================================================
+; This file contains test states for verifying MUGEN 1.1 compatibility.
+;
+; Usage:
+;   1. Add "st4 = test-compat.cns" to Songoku's songoku.def [Files] section
+;   2. Start a match as Songoku
+;   3. Use the button combinations listed below to trigger each test
+;   4. Observe the clipboard (Ctrl+D in debug mode) for test results
+;
+; All tests use DisplayToClipboard to output results.
+; Enable debug mode with Ctrl+D to see the clipboard.
+;
+; Button notation:
+;   x = light punch    y = medium punch    z = heavy punch
+;   a = light kick     b = medium kick     c = heavy kick
+;   F = hold forward   B = hold back       U = up   D = down
+; ============================================================================
+
+; ============================================================================
+; TEST 1: IfElse eager evaluation
+; ============================================================================
+; Trigger: D, D, x  (press Down twice then Light Punch)
+; Expected: BOTH var(50) and var(51) are set to 1 (eager evaluation)
+; If only var(50) is 1, IfElse is lazy (BUG)
+; ============================================================================
+
+[Statedef 12000]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12000, Reset]
+type = VarSet
+trigger1 = Time = 0
+v = 50
+value = 0
+
+[State 12000, Reset2]
+type = VarSet
+trigger1 = Time = 0
+v = 51
+value = 0
+
+[State 12000, IfElseTest]
+type = VarSet
+trigger1 = Time = 0
+v = 52
+value = IfElse(1, var(50) := 1, var(51) := 1)
+
+[State 12000, Display]
+type = DisplayToClipboard
+trigger1 = Time = 0
+text = "IfElse: var50=%d var51=%d (expect both=1 for eager)"
+params = var(50), var(51)
+
+[State 12000, End]
+type = ChangeState
+trigger1 = Time = 10
+value = 0
+ctrl = 1
+
+; ============================================================================
+; TEST 2: Cond lazy evaluation
+; ============================================================================
+; Trigger: D, D, y  (press Down twice then Medium Punch)
+; Expected: ONLY var(50) is set to 1 (lazy evaluation)
+; If both var(50) and var(51) are 1, Cond is eager (BUG)
+; ============================================================================
+
+[Statedef 12001]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12001, Reset]
+type = VarSet
+trigger1 = Time = 0
+v = 50
+value = 0
+
+[State 12001, Reset2]
+type = VarSet
+trigger1 = Time = 0
+v = 51
+value = 0
+
+[State 12001, CondTest]
+type = VarSet
+trigger1 = Time = 0
+v = 52
+value = Cond(1, var(50) := 1, var(51) := 1)
+
+[State 12001, Display]
+type = DisplayToClipboard
+trigger1 = Time = 0
+text = "Cond: var50=%d var51=%d (expect only var50=1 for lazy)"
+params = var(50), var(51)
+
+[State 12001, End]
+type = ChangeState
+trigger1 = Time = 10
+value = 0
+ctrl = 1
+
+; ============================================================================
+; TEST 3: GetHitVar(slidetime)
+; ============================================================================
+; Trigger: D, D, z  (press Down twice then Heavy Punch)
+; This state creates a HitDef with ground.slidetime=30, then when P2
+; is hit, P2's clipboard shows GetHitVar(slidetime).
+; NOTE: This test requires P2 to be hit. Use a training dummy.
+; ============================================================================
+
+[Statedef 12002]
+type = S
+movetype = A
+physics = S
+ctrl = 0
+anim = 200
+
+[State 12002, HitDef]
+type = HitDef
+trigger1 = Time = 0
+attr = S, NA
+hitflag = MAF
+damage = 10
+pausetime = 10, 10
+ground.slidetime = 30
+ground.hittime = 20
+ground.velocity = -5
+air.velocity = -2, -4
+sparkxy = 0, -60
+; hitonce = 0 (default for non-throw — tests our fix)
+
+[State 12002, Display]
+type = DisplayToClipboard
+trigger1 = movehit
+text = "HitDef: slidetime=30. P2 GetHitVar(slidetime)=%d"
+params = gethitvar(slidetime)
+
+[State 12002, End]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+; ============================================================================
+; TEST 4: hitonce defaults
+; ============================================================================
+; Test 4a: Normal attr, hitonce omitted (should default to 0)
+; Trigger: D, F, x
+; Test 4b: Throw attr, hitonce omitted (should default to 1)
+; Trigger: D, F, y
+; Test 4c: Normal attr, explicit hitonce=0
+; Trigger: D, F, z
+; Test 4d: Normal attr, explicit hitonce=1
+; Trigger: D, F, a
+; Test 4e: Throw attr, explicit hitonce=0 (should override throw default)
+; Trigger: D, F, b
+; ============================================================================
+
+[Statedef 12010]
+type = S
+movetype = A
+physics = S
+ctrl = 0
+anim = 200
+
+[State 12010, HitDef]
+type = HitDef
+trigger1 = Time = 0
+attr = S, NA
+hitflag = MAF
+damage = 10
+pausetime = 5, 5
+; hitonce NOT specified — should default to 0 for non-throw
+
+[State 12010, Display]
+type = DisplayToClipboard
+trigger1 = movehit
+text = "hitonce test 4a: normal omitted -> %d (expect 0)"
+params = gethitvar(hitonce)
+
+[State 12010, End]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+
+[Statedef 12011]
+type = S
+movetype = A
+physics = S
+ctrl = 0
+anim = 200
+
+[State 12011, HitDef]
+type = HitDef
+trigger1 = Time = 0
+attr = S, NT
+hitflag = M-
+damage = 50
+pausetime = 5, 5
+p1stateno = 12011
+p2stateno = 12011
+; hitonce NOT specified — should default to 1 for throw
+
+[State 12011, Display]
+type = DisplayToClipboard
+trigger1 = movehit
+text = "hitonce test 4b: throw omitted -> %d (expect 1)"
+params = gethitvar(hitonce)
+
+[State 12011, End]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+
+[Statedef 12012]
+type = S
+movetype = A
+physics = S
+ctrl = 0
+anim = 200
+
+[State 12012, HitDef]
+type = HitDef
+trigger1 = Time = 0
+attr = S, NA
+hitflag = MAF
+damage = 10
+pausetime = 5, 5
+hitonce = 0
+
+[State 12012, Display]
+type = DisplayToClipboard
+trigger1 = movehit
+text = "hitonce test 4c: explicit 0 -> %d (expect 0)"
+params = gethitvar(hitonce)
+
+[State 12012, End]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+
+[Statedef 12013]
+type = S
+movetype = A
+physics = S
+ctrl = 0
+anim = 200
+
+[State 12013, HitDef]
+type = HitDef
+trigger1 = Time = 0
+attr = S, NA
+hitflag = MAF
+damage = 10
+pausetime = 5, 5
+hitonce = 1
+
+[State 12013, Display]
+type = DisplayToClipboard
+trigger1 = movehit
+text = "hitonce test 4d: explicit 1 -> %d (expect 1)"
+params = gethitvar(hitonce)
+
+[State 12013, End]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+
+[Statedef 12014]
+type = S
+movetype = A
+physics = S
+ctrl = 0
+anim = 200
+
+[State 12014, HitDef]
+type = HitDef
+trigger1 = Time = 0
+attr = S, NT
+hitflag = M-
+damage = 50
+pausetime = 5, 5
+p1stateno = 12014
+p2stateno = 12014
+hitonce = 0
+
+[State 12014, Display]
+type = DisplayToClipboard
+trigger1 = movehit
+text = "hitonce test 4e: throw+explicit0 -> %d (expect 0)"
+params = gethitvar(hitonce)
+
+[State 12014, End]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+; ============================================================================
+; TEST 5: HitDef PalFX
+; ============================================================================
+; Test 5a: palfx.color=0 (grayscale)
+; Trigger: D, B, x
+; Test 5b: palfx.invertall=1
+; Trigger: D, B, y
+; Test 5c: palfx.sinadd
+; Trigger: D, B, z
+; Test 5d: All palfx combined
+; Trigger: D, B, a
+; Test 5e: palfx.time=0 (no effect)
+; Trigger: D, B, b
+; ============================================================================
+
+[Statedef 12020]
+type = S
+movetype = A
+physics = S
+ctrl = 0
+anim = 200
+
+[State 12020, HitDef]
+type = HitDef
+trigger1 = Time = 0
+attr = S, NA
+hitflag = MAF
+damage = 10
+pausetime = 10, 10
+palfx.time = 60
+palfx.color = 0
+
+[State 12020, Display]
+type = DisplayToClipboard
+trigger1 = Time = 0
+text = "PalFX 5a: color=0 -> P2 should be grayscale for 60 ticks"
+
+[State 12020, End]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+
+[Statedef 12021]
+type = S
+movetype = A
+physics = S
+ctrl = 0
+anim = 200
+
+[State 12021, HitDef]
+type = HitDef
+trigger1 = Time = 0
+attr = S, NA
+hitflag = MAF
+damage = 10
+pausetime = 10, 10
+palfx.time = 60
+palfx.invertall = 1
+
+[State 12021, Display]
+type = DisplayToClipboard
+trigger1 = Time = 0
+text = "PalFX 5b: invertall=1 -> P2 colors inverted for 60 ticks"
+
+[State 12021, End]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+
+[Statedef 12022]
+type = S
+movetype = A
+physics = S
+ctrl = 0
+anim = 200
+
+[State 12022, HitDef]
+type = HitDef
+trigger1 = Time = 0
+attr = S, NA
+hitflag = MAF
+damage = 10
+pausetime = 10, 10
+palfx.time = 90
+palfx.sinadd = 64, 0, 0, 10
+
+[State 12022, Display]
+type = DisplayToClipboard
+trigger1 = Time = 0
+text = "PalFX 5c: sinadd=64,0,0,10 -> P2 pulses red for 90 ticks"
+
+[State 12022, End]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+
+[Statedef 12023]
+type = S
+movetype = A
+physics = S
+ctrl = 0
+anim = 200
+
+[State 12023, HitDef]
+type = HitDef
+trigger1 = Time = 0
+attr = S, NA
+hitflag = MAF
+damage = 10
+pausetime = 10, 10
+palfx.time = 90
+palfx.add = 50, 50, 50
+palfx.mul = 200, 200, 200
+palfx.color = 128
+palfx.invertall = 0
+palfx.sinadd = 30, 30, 0, 8
+
+[State 12023, Display]
+type = DisplayToClipboard
+trigger1 = Time = 0
+text = "PalFX 5d: all combined -> P2 has combined effect for 90 ticks"
+
+[State 12023, End]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+
+[Statedef 12024]
+type = S
+movetype = A
+physics = S
+ctrl = 0
+anim = 200
+
+[State 12024, HitDef]
+type = HitDef
+trigger1 = Time = 0
+attr = S, NA
+hitflag = MAF
+damage = 10
+pausetime = 10, 10
+palfx.time = 0
+palfx.add = 255, 0, 0
+palfx.invertall = 1
+
+[State 12024, Display]
+type = DisplayToClipboard
+trigger1 = Time = 0
+text = "PalFX 5e: time=0 -> NO effect despite add/invertall"
+
+[State 12024, End]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+; ============================================================================
+; TEST 6: DestroySelf recursive/removeexplods
+; ============================================================================
+; Test 6a: recursive=0 (only self destroyed, children reparented)
+; Trigger: D, D, F, x
+; Test 6b: recursive=1 (self + all descendants destroyed)
+; Trigger: D, D, F, y
+; Test 6c: removeexplods=0 (explods survive as orphaned)
+; Trigger: D, D, F, z
+; Test 6d: removeexplods=1 (explods removed)
+; Trigger: D, D, F, a
+; Test 6e: recursive=1 + removeexplods=0
+; Trigger: D, D, F, b
+; Test 6f: recursive=1 + removeexplods=1
+; Trigger: D, D, F, c
+; ============================================================================
+
+; --- 6a: recursive=0 ---
+[Statedef 12030]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12030, CreateHelper]
+type = Helper
+trigger1 = Time = 0
+helpertype = normal
+name = "TestChild"
+ID = 1000
+pos = 50, 0
+postype = p1
+stateno = 12031
+keyctrl = 0
+ownpal = 1
+
+[State 12030, Wait]
+type = ChangeState
+trigger1 = Time = 30
+value = 12032
+
+; Child helper
+[Statedef 12031]
+type = S
+movetype = I
+physics = N
+ctrl = 0
+anim = 0
+
+[State 12031, Display]
+type = DisplayToClipboard
+trigger1 = 1
+text = "Child helper alive (state 12031)"
+
+[State 12031, Persist]
+type = ChangeState
+trigger1 = 1
+value = 12031
+
+; Destroy with recursive=0
+[Statedef 12032]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12032, Destroy]
+type = DestroySelf
+trigger1 = Time = 0
+recursive = 0
+removeexplods = 0
+
+; --- 6b: recursive=1 ---
+[Statedef 12033]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12033, CreateHelper]
+type = Helper
+trigger1 = Time = 0
+helpertype = normal
+name = "TestChild2"
+ID = 1001
+pos = 50, 0
+postype = p1
+stateno = 12034
+keyctrl = 0
+ownpal = 1
+
+[State 12033, Wait]
+type = ChangeState
+trigger1 = Time = 30
+value = 12035
+
+; Child helper
+[Statedef 12034]
+type = S
+movetype = I
+physics = N
+ctrl = 0
+anim = 0
+
+[State 12034, Display]
+type = DisplayToClipboard
+trigger1 = 1
+text = "Child2 helper alive (state 12034)"
+
+[State 12034, Persist]
+type = ChangeState
+trigger1 = 1
+value = 12034
+
+; Destroy with recursive=1
+[Statedef 12035]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12035, Destroy]
+type = DestroySelf
+trigger1 = Time = 0
+recursive = 1
+removeexplods = 0
+
+; --- 6c: removeexplods=0 (orphaned explods) ---
+[Statedef 12036]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12036, CreateExplod]
+type = Explod
+trigger1 = Time = 0
+anim = 10
+ID = 2000
+pos = 30, -60
+postype = p1
+facing = 1
+bindtime = -1
+removetime = -1
+scale = 1, 1
+sprpriority = 5
+
+[State 12036, Display]
+type = DisplayToClipboard
+trigger1 = Time = 0
+text = "Helper created explod. DestroySelf removeexplods=0 next."
+
+[State 12036, Wait]
+type = ChangeState
+trigger1 = Time = 15
+value = 12037
+
+[Statedef 12037]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12037, Destroy]
+type = DestroySelf
+trigger1 = Time = 0
+recursive = 0
+removeexplods = 0
+
+; --- 6d: removeexplods=1 ---
+[Statedef 12038]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12038, CreateExplod]
+type = Explod
+trigger1 = Time = 0
+anim = 10
+ID = 2001
+pos = 30, -60
+postype = p1
+facing = 1
+bindtime = -1
+removetime = -1
+scale = 1, 1
+sprpriority = 5
+
+[State 12038, Display]
+type = DisplayToClipboard
+trigger1 = Time = 0
+text = "Helper created explod. DestroySelf removeexplods=1 next."
+
+[State 12038, Wait]
+type = ChangeState
+trigger1 = Time = 15
+value = 12039
+
+[Statedef 12039]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12039, Destroy]
+type = DestroySelf
+trigger1 = Time = 0
+recursive = 0
+removeexplods = 1
+
+; --- 6e: recursive=1 + removeexplods=0 ---
+[Statedef 12040]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12040, CreateChild]
+type = Helper
+trigger1 = Time = 0
+helpertype = normal
+name = "TestChild3"
+ID = 1002
+pos = 50, 0
+postype = p1
+stateno = 12041
+keyctrl = 0
+ownpal = 1
+
+[State 12040, Wait]
+type = ChangeState
+trigger1 = Time = 30
+value = 12042
+
+; Child with explod
+[Statedef 12041]
+type = S
+movetype = I
+physics = N
+ctrl = 0
+anim = 0
+
+[State 12041, CreateExplod]
+type = Explod
+trigger1 = Time = 0
+anim = 10
+ID = 2002
+pos = 30, -60
+postype = p1
+facing = 1
+bindtime = -1
+removetime = -1
+scale = 1, 1
+sprpriority = 5
+
+[State 12041, Persist]
+type = ChangeState
+trigger1 = 1
+value = 12041
+
+; Destroy with recursive=1, removeexplods=0
+[Statedef 12042]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12042, Destroy]
+type = DestroySelf
+trigger1 = Time = 0
+recursive = 1
+removeexplods = 0
+
+; --- 6f: recursive=1 + removeexplods=1 ---
+[Statedef 12043]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12043, CreateChild]
+type = Helper
+trigger1 = Time = 0
+helpertype = normal
+name = "TestChild4"
+ID = 1003
+pos = 50, 0
+postype = p1
+stateno = 12044
+keyctrl = 0
+ownpal = 1
+
+[State 12043, Wait]
+type = ChangeState
+trigger1 = Time = 30
+value = 12045
+
+; Child with explod
+[Statedef 12044]
+type = S
+movetype = I
+physics = N
+ctrl = 0
+anim = 0
+
+[State 12044, CreateExplod]
+type = Explod
+trigger1 = Time = 0
+anim = 10
+ID = 2003
+pos = 30, -60
+postype = p1
+facing = 1
+bindtime = -1
+removetime = -1
+scale = 1, 1
+sprpriority = 5
+
+[State 12044, Persist]
+type = ChangeState
+trigger1 = 1
+value = 12044
+
+; Destroy with recursive=1, removeexplods=1
+[Statedef 12045]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 0
+
+[State 12045, Destroy]
+type = DestroySelf
+trigger1 = Time = 0
+recursive = 1
+removeexplods = 1
+
+; ============================================================================
+; COMMAND DEFINITIONS
+; ============================================================================
+; Add these to songoku.cmd or include them via st4=test-compat.cns
+; The engine reads [Command] entries from .cmd files.
+; Since we're adding as st4, we need to define commands here too.
+; ============================================================================
+
+[Command]
+name = "Test_IfElse"
+command = D, D, x
+time = 30
+
+[Command]
+name = "Test_Cond"
+command = D, D, y
+time = 30
+
+[Command]
+name = "Test_GetHitVar"
+command = D, D, z
+time = 30
+
+[Command]
+name = "Test_hitonce_normal"
+command = D, F, x
+time = 30
+
+[Command]
+name = "Test_hitonce_throw"
+command = D, F, y
+time = 30
+
+[Command]
+name = "Test_hitonce_explicit0"
+command = D, F, z
+time = 30
+
+[Command]
+name = "Test_hitonce_explicit1"
+command = D, F, a
+time = 30
+
+[Command]
+name = "Test_hitonce_throw0"
+command = D, F, b
+time = 30
+
+[Command]
+name = "Test_palfx_color"
+command = D, B, x
+time = 30
+
+[Command]
+name = "Test_palfx_invertall"
+command = D, B, y
+time = 30
+
+[Command]
+name = "Test_palfx_sinadd"
+command = D, B, z
+time = 30
+
+[Command]
+name = "Test_palfx_combined"
+command = D, B, a
+time = 30
+
+[Command]
+name = "Test_palfx_time0"
+command = D, B, b
+time = 30
+
+[Command]
+name = "Test_destroy_recursive0"
+command = D, D, F, x
+time = 40
+
+[Command]
+name = "Test_destroy_recursive1"
+command = D, D, F, y
+time = 40
+
+[Command]
+name = "Test_destroy_removeexplods0"
+command = D, D, F, z
+time = 40
+
+[Command]
+name = "Test_destroy_removeexplods1"
+command = D, D, F, a
+time = 40
+
+[Command]
+name = "Test_destroy_rec1_rem0"
+command = D, D, F, b
+time = 40
+
+[Command]
+name = "Test_destroy_rec1_rem1"
+command = D, D, F, c
+time = 40
+
+; ============================================================================
+; STATE -2: Command handlers (run in any state)
+; ============================================================================
+
+[Statedef -2]
+
+[State -2, IfElse]
+type = ChangeState
+trigger1 = command = "Test_IfElse"
+value = 12000
+ctrl = 0
+
+[State -2, Cond]
+type = ChangeState
+trigger1 = command = "Test_Cond"
+value = 12001
+ctrl = 0
+
+[State -2, GetHitVar]
+type = ChangeState
+trigger1 = command = "Test_GetHitVar"
+value = 12002
+ctrl = 0
+
+[State -2, hitonce_normal]
+type = ChangeState
+trigger1 = command = "Test_hitonce_normal"
+value = 12010
+ctrl = 0
+
+[State -2, hitonce_throw]
+type = ChangeState
+trigger1 = command = "Test_hitonce_throw"
+value = 12011
+ctrl = 0
+
+[State -2, hitonce_explicit0]
+type = ChangeState
+trigger1 = command = "Test_hitonce_explicit0"
+value = 12012
+ctrl = 0
+
+[State -2, hitonce_explicit1]
+type = ChangeState
+trigger1 = command = "Test_hitonce_explicit1"
+value = 12013
+ctrl = 0
+
+[State -2, hitonce_throw0]
+type = ChangeState
+trigger1 = command = "Test_hitonce_throw0"
+value = 12014
+ctrl = 0
+
+[State -2, palfx_color]
+type = ChangeState
+trigger1 = command = "Test_palfx_color"
+value = 12020
+ctrl = 0
+
+[State -2, palfx_invertall]
+type = ChangeState
+trigger1 = command = "Test_palfx_invertall"
+value = 12021
+ctrl = 0
+
+[State -2, palfx_sinadd]
+type = ChangeState
+trigger1 = command = "Test_palfx_sinadd"
+value = 12022
+ctrl = 0
+
+[State -2, palfx_combined]
+type = ChangeState
+trigger1 = command = "Test_palfx_combined"
+value = 12023
+ctrl = 0
+
+[State -2, palfx_time0]
+type = ChangeState
+trigger1 = command = "Test_palfx_time0"
+value = 12024
+ctrl = 0
+
+[State -2, destroy_recursive0]
+type = Helper
+trigger1 = command = "Test_destroy_recursive0"
+helpertype = normal
+name = "TestHelper_rec0"
+stateno = 12030
+pos = 0, 0
+postype = p1
+ownpal = 1
+
+[State -2, destroy_recursive1]
+type = Helper
+trigger1 = command = "Test_destroy_recursive1"
+helpertype = normal
+name = "TestHelper_rec1"
+stateno = 12033
+pos = 0, 0
+postype = p1
+ownpal = 1
+
+[State -2, destroy_removeexplods0]
+type = Helper
+trigger1 = command = "Test_destroy_removeexplods0"
+helpertype = normal
+name = "TestHelper_rem0"
+stateno = 12036
+pos = 0, 0
+postype = p1
+ownpal = 1
+
+[State -2, destroy_removeexplods1]
+type = Helper
+trigger1 = command = "Test_destroy_removeexplods1"
+helpertype = normal
+name = "TestHelper_rem1"
+stateno = 12038
+pos = 0, 0
+postype = p1
+ownpal = 1
+
+[State -2, destroy_rec1_rem0]
+type = Helper
+trigger1 = command = "Test_destroy_rec1_rem0"
+helpertype = normal
+name = "TestHelper_rec1rem0"
+stateno = 12040
+pos = 0, 0
+postype = p1
+ownpal = 1
+
+[State -2, destroy_rec1_rem1]
+type = Helper
+trigger1 = command = "Test_destroy_rec1_rem1"
+helpertype = normal
+name = "TestHelper_rec1rem1"
+stateno = 12043
+pos = 0, 0
+postype = p1
+ownpal = 1
